@@ -1,0 +1,15 @@
+# Dependencias instaladas
+node_modules/
+
+# Credenciales del backend
+backend/.env
+
+# Carpetas generadas por Expo al correr el mobile
+mobile/.expo/
+
+# Config personal de VS Code
+.vscode/
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db

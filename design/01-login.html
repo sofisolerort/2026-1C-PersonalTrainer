@@ -1,0 +1,265 @@
+<!doctype html>
+
+<html class="h-full bg-background" lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-container-highest": "#e1e2ed",
+              "tertiary-fixed": "#ffdbcd",
+              "primary-fixed": "#dbe1ff",
+              "surface-container-lowest": "#ffffff",
+              "surface-bright": "#faf8ff",
+              "secondary-fixed": "#6ffbbe",
+              "primary-fixed-dim": "#b4c5ff",
+              "on-error-container": "#93000a",
+              "surface-tint": "#0053db",
+              outline: "#737686",
+              "on-secondary-fixed": "#002113",
+              secondary: "#006c49",
+              "on-primary-container": "#eeefff",
+              error: "#ba1a1a",
+              "surface-variant": "#e1e2ed",
+              "primary-container": "#2563eb",
+              "on-tertiary-fixed": "#360f00",
+              "inverse-on-surface": "#f0f0fb",
+              "on-tertiary": "#ffffff",
+              "on-secondary-container": "#00714d",
+              "on-tertiary-container": "#ffede6",
+              "surface-container": "#ededf9",
+              "surface-container-high": "#e7e7f3",
+              "surface-container-low": "#f3f3fe",
+              "on-primary": "#ffffff",
+              "on-background": "#191b23",
+              "inverse-surface": "#2e3039",
+              "error-container": "#ffdad6",
+              background: "#faf8ff",
+              tertiary: "#943700",
+              "secondary-container": "#6cf8bb",
+              "on-surface-variant": "#434655",
+              "surface-dim": "#d9d9e5",
+              "on-secondary-fixed-variant": "#005236",
+              "on-primary-fixed": "#00174b",
+              "on-tertiary-fixed-variant": "#7d2d00",
+              surface: "#faf8ff",
+              "tertiary-fixed-dim": "#ffb596",
+              "on-secondary": "#ffffff",
+              "outline-variant": "#c3c6d7",
+              "on-error": "#ffffff",
+              "tertiary-container": "#bc4800",
+              "on-primary-fixed-variant": "#003ea8",
+              "secondary-fixed-dim": "#4edea3",
+              primary: "#004ac6",
+              "on-surface": "#191b23",
+              "inverse-primary": "#b4c5ff",
+            },
+            borderRadius: {
+              DEFAULT: "0.25rem",
+              lg: "0.5rem",
+              xl: "0.75rem",
+              "2xl": "12px",
+              "3xl": "32px",
+              full: "9999px",
+            },
+            spacing: {
+              xs: "4px",
+              lg: "24px",
+              gutter: "24px",
+              container_max_width: "1280px",
+              sm: "8px",
+              md: "16px",
+              base: "4px",
+              xxl: "48px",
+              xl: "32px",
+            },
+            fontFamily: {
+              h2: ["Inter"],
+              h3: ["Inter"],
+              h1: ["Inter"],
+              "label-caps": ["Inter"],
+              "body-sm": ["Inter"],
+              "body-md": ["Inter"],
+              "body-lg": ["Inter"],
+              button: ["Inter"],
+            },
+            fontSize: {
+              h2: [
+                "30px",
+                {
+                  lineHeight: "1.2",
+                  letterSpacing: "-0.01em",
+                  fontWeight: "700",
+                },
+              ],
+              h3: ["24px", { lineHeight: "1.3", fontWeight: "600" }],
+              h1: [
+                "36px",
+                {
+                  lineHeight: "1.2",
+                  letterSpacing: "-0.02em",
+                  fontWeight: "700",
+                },
+              ],
+              "label-caps": [
+                "12px",
+                { lineHeight: "1", letterSpacing: "0.05em", fontWeight: "600" },
+              ],
+              "body-sm": ["14px", { lineHeight: "1.5", fontWeight: "400" }],
+              "body-md": ["16px", { lineHeight: "1.5", fontWeight: "400" }],
+              "body-lg": ["18px", { lineHeight: "1.6", fontWeight: "400" }],
+              button: ["16px", { lineHeight: "1", fontWeight: "600" }],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      .material-symbols-outlined {
+        font-variation-settings:
+          "FILL" 0,
+          "wght" 400,
+          "GRAD" 0,
+          "opsz" 24;
+        vertical-align: middle;
+      }
+    </style>
+    <style>
+      body {
+        min-height: max(884px, 100dvh);
+      }
+    </style>
+  </head>
+  <body class="h-full flex flex-col font-body-md text-on-surface">
+    <!-- Screen Container (Mobile 9:16 Aspect Context) -->
+    <main class="flex-grow flex flex-col relative h-screen overflow-hidden">
+      <!-- SECCIÓN SUPERIOR (40%) -->
+      <section class="h-[40%] relative w-full overflow-hidden">
+        <img
+          alt="Atleta entrenando"
+          class="absolute inset-0 w-full h-full object-cover"
+          data-alt="A high-quality, professional photograph of an elite athlete in mid-stride during a high-intensity running session. The composition is clean and focused, with lighting that highlights movement and peak performance."
+          src="https://lh3.googleusercontent.com/aida-public/AB6AXuAFQrE5mpMfD7jbvlLtnHI-R8nTWd9afSaChN0w8vhmhfbW2GC6PpbWgIrn7WY2YU3KuJ8_f8sUIsxnUuJqXZMnfnoo5leczm0yxqF2yCJKuU0sbMcd9jC2hVGVlk9mmt0Y9jAowjesF9FhdrXXR6MmBCnB11TXEUL14Jgl69vIaZ8g-Uwi9WBZ3d2GstjGiQQW8rXpQMWwJ30Z1cgCgiaPXvsKEXDVetlC1CYRFI_vxi9iuCxjSXK1cPmaLPmD4l41mfUd-hN3Jx8"
+        />
+        <!-- Overlay azul oscuro semi-transparente -->
+        <div
+          class="absolute inset-0 bg-[#1F2937]/70 backdrop-blur-[2px] flex flex-col items-center justify-center text-center px-lg"
+        >
+          <h1 class="font-h1 text-white text-[44px] mb-sm tracking-tighter">
+            AC Training
+          </h1>
+          <p class="text-white italic font-body-lg opacity-90">
+            Tu próxima versión empieza hoy
+          </p>
+        </div>
+      </section>
+      <!-- SECCIÓN INFERIOR (60%) - Contenedor blanco -->
+      <section
+        class="h-[60%] -mt-xxl relative z-10 bg-surface-container-lowest rounded-t-3xl shadow-2xl flex flex-col"
+      >
+        <div class="flex-grow overflow-y-auto px-lg pt-xl">
+          <!-- Títulos -->
+          <div class="mb-xl">
+            <h2 class="font-h2 text-on-surface mb-xs">Iniciá sesión</h2>
+            <p class="font-body-md text-outline">
+              Entrá a tu cuenta para continuar
+            </p>
+          </div>
+          <!-- Formulario -->
+          <form class="space-y-lg" onsubmit="return false;">
+            <!-- Campo Email -->
+            <div class="flex flex-col gap-sm">
+              <label class="font-button text-on-surface text-sm" for="email"
+                >Email</label
+              >
+              <div class="relative group">
+                <span
+                  class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors"
+                  data-icon="mail"
+                  >mail</span
+                >
+                <input
+                  class="w-full pl-[48px] pr-md py-md bg-white border border-outline-variant rounded-2xl focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all font-body-md placeholder:text-outline-variant"
+                  id="email"
+                  name="email"
+                  placeholder="tu@email.com"
+                  type="email"
+                />
+              </div>
+            </div>
+            <!-- Campo Contraseña -->
+            <div class="flex flex-col gap-sm">
+              <label class="font-button text-on-surface text-sm" for="password"
+                >Contraseña</label
+              >
+              <div class="relative group">
+                <span
+                  class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors"
+                  data-icon="lock"
+                  >lock</span
+                >
+                <input
+                  class="w-full pl-[48px] pr-[48px] py-md bg-white border border-outline-variant rounded-2xl focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all font-body-md placeholder:text-outline-variant"
+                  id="password"
+                  name="password"
+                  placeholder="••••••••"
+                  type="password"
+                />
+                <button
+                  class="absolute right-md top-1/2 -translate-y-1/2 text-outline hover:text-on-surface"
+                  type="button"
+                >
+                  <span class="material-symbols-outlined" data-icon="visibility"
+                    >visibility</span
+                  >
+                </button>
+              </div>
+              <div class="flex justify-end">
+                <a
+                  class="text-sm font-button text-primary hover:underline"
+                  href="#"
+                  >¿Olvidaste tu contraseña?</a
+                >
+              </div>
+            </div>
+            <!-- Botón Iniciar Sesión -->
+            <button
+              class="w-full bg-primary-container text-on-primary py-md rounded-2xl font-button text-lg shadow-sm hover:shadow-md active:scale-[0.98] transition-all duration-200 mt-md"
+              type="submit"
+            >
+              Iniciar sesión
+            </button>
+          </form>
+          <!-- Separador -->
+          <!-- Redes Sociales (Opcional pero recomendado para UI moderna) -->
+        </div>
+        <!-- Footer fijo abajo -->
+        <footer class="pb-xl text-center">
+          <p class="font-body-md text-outline">
+            ¿No tenés cuenta?
+            <a class="font-button text-primary hover:underline" href="#"
+              >Registrate</a
+            >
+          </p>
+        </footer>
+      </section>
+    </main>
+  </body>
+</html>
