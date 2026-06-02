@@ -1,5 +1,5 @@
 import { View, Text, Pressable } from "react-native";
-import { router } from "expo-router";
+
 
 export default function HomeScreen() {
   return (
@@ -21,7 +21,7 @@ export default function HomeScreen() {
           paddingHorizontal: 24,
           borderRadius: 8,
         }}
-        onPress={() => router.push("/trainer/home")}
+       // onPress={() => router.push("/(trainer)/home")}
       >
         <Text style={{ color: "#FFF", fontSize: 16, fontWeight: "600" }}>
           Ir al dashboard del trainer

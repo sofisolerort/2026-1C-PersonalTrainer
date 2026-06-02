@@ -1,22 +1,25 @@
-// components/CustomInput.tsx
-import { COLORS, FONT_SIZES, ROUNDNESS, SPACING } from '@/constants/theme';
 import React from 'react';
-import { StyleSheet, Text, TextInput, TextInputProps, View } from 'react-native';
+import { StyleSheet, Text, TextInput, TextInputProps, View, StyleProp, ViewStyle, TextStyle } from 'react-native';
+import { COLORS, RADIUS, SPACING, TYPOGRAPHY } from '@/constants/theme';
 
-
-// Nuestra interfaz hereda absolutamente todo lo que tiene un TextInput nativo
 interface CustomInputProps extends TextInputProps {
   label: string;
+  containerStyle?: StyleProp<ViewStyle>;
 }
 
-export const CustomInput: React.FC<CustomInputProps> = ({ label, ...restProps }) => {
+export const CustomInput: React.FC<CustomInputProps> = ({ 
+  label, 
+  containerStyle, 
+  style, 
+  ...restProps 
+ }) => {
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, containerStyle]}>
       <Text style={styles.label}>{label}</Text>
       <TextInput
-        style={styles.input}
-        placeholderTextColor={COLORS.textSecondary}
-        {...restProps} // Con el operador rest esparcimos el resto de las props nativas automáticamente
+        style={[styles.input, style]}
+        placeholderTextColor={COLORS.onSurfaceVariant}
+        {...restProps}
       />
     </View>
   );
@@ -25,21 +28,21 @@ export const CustomInput: React.FC<CustomInputProps> = ({ label, ...restProps })
 const styles = StyleSheet.create({
   container: {
     marginBottom: SPACING.lg,
+    width: '100%',
   },
   label: {
-    fontSize: FONT_SIZES.sm,
-    fontWeight: '600',
-    color: COLORS.textPrimary,
+    ...(TYPOGRAPHY.bodySm as TextStyle),
+    color: COLORS.onSurface,
     marginBottom: SPACING.sm,
   },
   input: {
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.surface,
     borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: ROUNDNESS.md,
+    borderColor: COLORS.outlineVariant,
+    borderRadius: RADIUS.md,
     height: 48,
     paddingHorizontal: SPACING.md,
-    fontSize: FONT_SIZES.md,
-    color: COLORS.textPrimary,
+    color: COLORS.onSurface,
+    ...(TYPOGRAPHY.bodyMd as TextStyle),
   },
 });

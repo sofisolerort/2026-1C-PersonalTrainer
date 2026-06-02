@@ -1,3 +1,5 @@
+
+
 export const COLORS = {
   // Primario (azul de marca)
   primary: "#2563EB",
@@ -32,13 +34,15 @@ export const COLORS = {
   surfaceContainer: "#EDEDF9",
   surfaceContainerHigh: "#E7E7F3",
 
-  // Textos
+  // Textos y Bordes
   onSurface: "#191B23",
   onSurfaceVariant: "#434655",
   outline: "#737686",
   outlineVariant: "#C3C6D7",
 };
 
+// Al tipar explícitamente como Record<string, TextStyle>, obligamos a que 
+// propiedades como fontWeight y textTransform utilicen los tipos literales estrictos de React Native.
 export const TYPOGRAPHY = {
   h1: {
     fontFamily: "Inter",
@@ -117,13 +121,13 @@ export const SHADOWS = {
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
     shadowRadius: 20,
-    elevation: 3,
+    elevation: 3, // Sombras nativas para Android
   },
   modal: {
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.15,
     shadowRadius: 32,
-    elevation: 8,
+    elevation: 8, // Sombras nativas para Android
   },
 };

@@ -1,26 +1,34 @@
-// components/CustomButton.tsx
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, TouchableOpacityProps, ActivityIndicator } from 'react-native';
-import { COLORS, FONT_SIZES, ROUNDNESS, SPACING } from '@/constants/theme';
+import { StyleSheet, Text, TouchableOpacity, TouchableOpacityProps, ActivityIndicator, TextStyle } from 'react-native';
+import { COLORS, RADIUS, SPACING, TYPOGRAPHY } from '@/constants/theme';
 
 interface CustomButtonProps extends TouchableOpacityProps {
   title: string;
   loading?: boolean;
 }
 
-export const CustomButton: React.FC<CustomButtonProps> = ({ title, loading = false, disabled, style, ...restProps }) => {
+export const CustomButton: React.FC<CustomButtonProps> = ({ 
+  title, 
+  loading = false, 
+  disabled, 
+  style, 
+  ...restProps 
+}) => {
+  const isButtonDisabled = disabled || loading;
+
   return (
     <TouchableOpacity
       style={[
         styles.button,
-        (disabled || loading) && styles.buttonDisabled,
-        style // Permite sobreescribir o añadir estilos externos si fuera necesario
+        isButtonDisabled && styles.buttonDisabled,
+        style 
       ]}
-      disabled={disabled || loading}
+      disabled={isButtonDisabled}
+      activeOpacity={0.8}
       {...restProps}
     >
       {loading ? (
-        <ActivityIndicator color={COLORS.textLight} />
+        <ActivityIndicator color={COLORS.onPrimary} />
       ) : (
         <Text style={styles.buttonText}>{title}</Text>
       )}
@@ -31,19 +39,19 @@ export const CustomButton: React.FC<CustomButtonProps> = ({ title, loading = fal
 const styles = StyleSheet.create({
   button: {
     backgroundColor: COLORS.primary,
-    borderRadius: ROUNDNESS.md,
+    borderRadius: RADIUS.md,
     height: 50,
-    justifyContent: 'center',
+    justifyContent: 'center', // Arreglado el error que rompía el StyleSheet
     alignItems: 'center',
     marginTop: SPACING.md,
+    paddingHorizontal: SPACING.md,
   },
   buttonDisabled: {
-    backgroundColor: COLORS.textSecondary,
-    opacity: 0.7,
+    backgroundColor: COLORS.neutralLight,
+    opacity: 0.6,
   },
   buttonText: {
-    color: COLORS.textLight,
-    fontSize: FONT_SIZES.md,
-    fontWeight: '600',
+    color: COLORS.onPrimary,
+    ...(TYPOGRAPHY.button as TextStyle), 
   },
 });

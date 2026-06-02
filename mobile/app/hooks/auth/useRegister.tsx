@@ -1,31 +1,73 @@
-// hooks/useRegister.ts
 import { useState } from "react";
 import { Alert } from "react-native";
 import { supabase } from "@/app/utils/Supabase";
 
 export const useRegister = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function signUpWithEmail() {
-    if (!email || !password) {
-      Alert.alert('Error', 'Por favor, completa todos los campos.');
+    if (!email.trim() || !password.trim()) {
+      Alert.alert(
+        "Campos obligatorios",
+        "Debes completar email y contraseña."
+      );
       return;
     }
 
-    setLoading(true);
-    const { data: { session }, error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
-
-    if (error) {
-      Alert.alert('Error', error.message);
-    } else if (!session) {
-      Alert.alert('Éxito', '¡Por favor verifica tu correo electrónico si está activado el flujo de confirmación!');
+    if (password.length < 6) {
+      Alert.alert(
+        "Contraseña inválida",
+        "La contraseña debe tener al menos 6 caracteres."
+      );
+      return;
     }
-    setLoading(false);
+
+    try {
+      setLoading(true);
+
+      const {
+        data: { session },
+        error,
+      } = await supabase.auth.signUp({
+        email: email.trim(),
+        password,
+      });
+
+      if (error) {
+        console.error("Supabase Error:", error);
+
+        Alert.alert(
+          "Error al registrarse",
+          error.message
+        );
+        return;
+      }
+
+      if (!session) {
+        Alert.alert(
+          "Registro exitoso",
+          "Revisa tu correo electrónico para confirmar la cuenta."
+        );
+        return;
+      }
+
+      Alert.alert(
+        "Registro exitoso",
+        "Tu cuenta fue creada correctamente."
+      );
+
+    } catch (error) {
+      console.error("Unexpected Error:", error);
+
+      Alert.alert(
+        "Error de conexión",
+        "No se pudo conectar con el servidor. Verifica tu conexión a internet."
+      );
+    } finally {
+      setLoading(false);
+    }
   }
 
   return {

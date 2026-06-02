@@ -1,14 +1,15 @@
 // app/auth/Onboarding.tsx
 import React, { useState } from 'react';
-import { View, Text, ScrollView, Alert, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, Alert, StyleSheet, TouchableOpacity, TextStyle } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { useRouter } from 'expo-router';
 import { supabase } from '../utils/Supabase';
 
-import { COLORS, SPACING, FONT_SIZES, ROUNDNESS } from '../../constants/theme';
+
 import { authStyles } from '../auth/authStyle/AuthStyle';
 import { CustomInput } from '../components/CustomInput';
 import { CustomButton } from '../components/CustomButton';
+import { COLORS, RADIUS, SPACING, TYPOGRAPHY } from '@/constants/theme';
 
 // 1. Tipado estricto del formulario (ahora con booleanos donde corresponde)
 interface OnboardingFormData {
@@ -249,10 +250,12 @@ export default function Onboarding() {
   );
 }
 
+
+
 const styles = StyleSheet.create({
   errorText: { 
     color: COLORS.error, 
-    fontSize: FONT_SIZES.xs, 
+    ...(TYPOGRAPHY.bodySm as TextStyle), // Reemplaza FONT_SIZES.xs y mantiene escala
     marginTop: -SPACING.md, 
     marginBottom: SPACING.md,
     fontWeight: '500'
@@ -269,8 +272,8 @@ const styles = StyleSheet.create({
   opcionBoton: { 
     backgroundColor: COLORS.background, 
     borderWidth: 1, 
-    borderColor: COLORS.border, 
-    borderRadius: ROUNDNESS.md, 
+    borderColor: COLORS.outlineVariant, // Corregido: antes COLORS.border
+    borderRadius: RADIUS.md,            // Corregido: antes ROUNDNESS.md
     paddingVertical: 10, 
     paddingHorizontal: SPACING.md, 
     flexGrow: 1,
@@ -282,12 +285,12 @@ const styles = StyleSheet.create({
     borderColor: COLORS.primary 
   },
   opcionTexto: { 
-    color: COLORS.textPrimary, 
-    fontSize: FONT_SIZES.sm, 
+    color: COLORS.onSurface,             // Corregido: antes COLORS.textPrimary
+    ...(TYPOGRAPHY.bodySm as TextStyle), // Corregido: antes FONT_SIZES.sm
     fontWeight: '500' 
   },
   opcionTextoSeleccionado: { 
-    color: COLORS.textLight 
+    color: COLORS.onPrimary              // Corregido: antes COLORS.textLight
   },
   rowBotones: { 
     flexDirection: 'row', 
@@ -299,14 +302,14 @@ const styles = StyleSheet.create({
     height: 50, 
     justifyContent: 'center', 
     paddingHorizontal: SPACING.lg, 
-    borderRadius: ROUNDNESS.md, 
+    borderRadius: RADIUS.md,            // Corregido: antes ROUNDNESS.md
     borderWidth: 1, 
-    borderColor: COLORS.border, 
+    borderColor: COLORS.outlineVariant, // Corregido: antes COLORS.border
     marginTop: SPACING.md 
   },
   textoAtras: { 
-    color: COLORS.textSecondary, 
+    color: COLORS.onSurfaceVariant,     // Corregido: antes COLORS.textSecondary
+    ...(TYPOGRAPHY.bodyMd as TextStyle), // Corregido: antes FONT_SIZES.md
     fontWeight: '600', 
-    fontSize: FONT_SIZES.md 
   }
 });
