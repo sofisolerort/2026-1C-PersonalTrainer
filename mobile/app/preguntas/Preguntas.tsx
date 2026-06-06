@@ -6,7 +6,7 @@ import { useRouter } from 'expo-router';
 import { supabase } from '../utils/Supabase';
 
 
-import { authStyles } from '../auth/authStyle/AuthStyle';
+import { authStyles } from '../(auth)/authStyle/AuthStyle';
 import { CustomInput } from '../components/CustomInput';
 import { CustomButton } from '../components/CustomButton';
 import { COLORS, RADIUS, SPACING, TYPOGRAPHY } from '@/constants/theme';
