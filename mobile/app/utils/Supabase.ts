@@ -4,28 +4,20 @@ import { createClient } from "@supabase/supabase-js";
 const ExpoSecureStoreAdapter = {
   getItem: (key: string) => SecureStore.getItemAsync(key),
 
-  setItem: (key: string, value: string) =>
-    SecureStore.setItemAsync(key, value),
+  setItem: (key: string, value: string) => SecureStore.setItemAsync(key, value),
 
-  removeItem: (key: string) =>
-    SecureStore.deleteItemAsync(key),
+  removeItem: (key: string) => SecureStore.deleteItemAsync(key),
 };
 
-const supabaseUrl: string =
-  "https://qfhsnavmpwyjkxmiewon.supabase.co";
+const supabaseUrl: string = process.env.EXPO_PUBLIC_SUPABASE_URL!;
 
-const supabaseAnonKey: string =
-  "sb_publishable_pLcezGiFIUWbvJyCOwM_rw_y_B0SBDY";
+const supabaseAnonKey: string = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!;
 
-export const supabase = createClient(
-  supabaseUrl,
-  supabaseAnonKey,
-  {
-    auth: {
-      storage: ExpoSecureStoreAdapter,
-      autoRefreshToken: true,
-      persistSession: true,
-      detectSessionInUrl: false,
-    },
-  }
-);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    storage: ExpoSecureStoreAdapter,
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: false,
+  },
+});

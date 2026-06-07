@@ -1,8 +1,8 @@
 # Dependencias instaladas
 node_modules/
 
-# Credenciales del backend
-backend/.env
+# Credenciales
+.env
 
 # Carpetas generadas por Expo al correr el mobile
 mobile/.expo/
