@@ -10,7 +10,6 @@ const clientes = [
     nombre: "Ana García",
     objetivo: "Pérdida de peso",
     diasEntrenamiento: 3,
-    fechaVencimiento: "12 de junio",
     estado: "activo",
   },
   {
@@ -18,7 +17,6 @@ const clientes = [
     nombre: "Juan Pérez",
     objetivo: "Hipertrofia",
     diasEntrenamiento: 4,
-    fechaVencimiento: "20 de junio",
     estado: "activo",
   },
   {
@@ -26,7 +24,6 @@ const clientes = [
     nombre: "María López",
     objetivo: "Tonificación",
     diasEntrenamiento: 5,
-    fechaVencimiento: "5 de julio",
     estado: "activo",
   },
 ];
@@ -58,8 +55,6 @@ const getMetricasTrainer = () => {
     setTimeout(() => {
       resolve({
         clientesActivos: clientes.filter((c) => c.estado === "activo").length,
-        pagosPendientes: 1,
-        porVencer: 2,
       });
     }, 500);
   });
