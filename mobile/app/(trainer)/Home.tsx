@@ -19,7 +19,7 @@ import {
   SHADOWS,
 } from "@/constants/theme";
 import { getClientes, getMetricasTrainer } from "../../services/clientes";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 
 export default function TrainerHome() {
   const { signOut } = useAuth();

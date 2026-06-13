@@ -10,8 +10,8 @@ import {
 } from "react-native";
 
 import { router } from "expo-router";
-import { useAuth } from "../context/AuthContext";
-import { supabase } from "../utils/Supabase";
+import { useAuth } from "../../context/AuthContext";
+import { supabase } from "../../utils/Supabase";
 
 export default function Login() {
   const [email, setEmail] = useState("");

@@ -2,8 +2,8 @@ import { Stack, Redirect } from "expo-router";
 
 import { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
-import { supabase } from "../utils/Supabase";
-import { useAuth } from "../context/AuthContext";
+import { supabase } from "../../utils/Supabase";
+import { useAuth } from "../../context/AuthContext";
 
 export default function ClienteLayout() {
   const { session, isLoading } = useAuth();
@@ -45,10 +45,10 @@ export default function ClienteLayout() {
         headerTitleStyle: { fontWeight: "bold" },
       }}
     >
-      <Stack.Screen name="home" options={{ title: "Inicio" }} />
-      <Stack.Screen name="perfil" options={{ title: "Mi Perfil" }} />
-      <Stack.Screen name="rutinas" options={{ title: "Mis Rutinas" }} />
-      <Stack.Screen name="configuracion" options={{ title: "Configuración" }} />
+      <Stack.Screen name="Home" options={{ title: "Inicio" }} />
+      <Stack.Screen name="Perfil" options={{ title: "Mi Perfil" }} />
+      <Stack.Screen name="Rutinas" options={{ title: "Mis Rutinas" }} />
+      <Stack.Screen name="Configuracion" options={{ title: "Configuración" }} />
       <Stack.Screen
         name="ejercicios/[id]"
         options={{ title: "Detalle Rutina" }}

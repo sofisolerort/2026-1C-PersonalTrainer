@@ -1,24 +1,27 @@
 // hooks/useLogin.ts
 import { useState } from "react";
 import { Alert } from "react-native";
-import { supabase } from "@/app/utils/Supabase";
+import { supabase } from "@/utils/Supabase";
 
 export const useLogin = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function signInWithEmail() {
     if (!email || !password) {
-      Alert.alert('Error', 'Por favor, completa todos los campos.');
+      Alert.alert("Error", "Por favor, completa todos los campos.");
       return;
     }
-    
+
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
     if (error) {
-      Alert.alert('Error', error.message);
+      Alert.alert("Error", error.message);
     }
     setLoading(false);
   }
@@ -29,6 +32,6 @@ export const useLogin = () => {
     password,
     setPassword,
     loading,
-    signInWithEmail
+    signInWithEmail,
   };
 };

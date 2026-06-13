@@ -1,8 +1,8 @@
 import { Stack, Redirect } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
-import { supabase } from "../utils/Supabase";
-import { useAuth } from "../context/AuthContext";
+import { supabase } from "../../utils/Supabase";
+import { useAuth } from "../../context/AuthContext";
 
 export default function TrainerLayout() {
   const { session, isLoading } = useAuth();
