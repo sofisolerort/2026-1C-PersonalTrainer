@@ -1,98 +1,97 @@
-# AC Training
+# Fitness App
 
-Aplicación mobile para la gestión integral del trabajo de un entrenador personal, en la cual puede administrar a todos sus clientes, armar planes de entrenamiento y hacer seguimiento del progreso.
+Aplicación mobile para gestión de entrenamientos entre un entrenador personal y sus clientes. Permite que el entrenador administre a sus clientes y que cada cliente acceda a sus rutinas asignadas.
 
-## Stack tecnológico
+## Funcionalidades actuales
 
-- **Frontend (mobile):** React Native con Expo
-- **Backend:** Node.js + Express
-- **Base de datos:** SQL Server
+- Registro de usuarios.
+- Onboarding del cliente (preguntas iniciales para conocer su perfil).
+- Login con sesión persistente (queda guardada aunque cierres la app).
+- Navegación según el rol del usuario (entrenador o cliente).
+- Pantalla principal del entrenador con la lista de sus clientes.
+- Pantalla principal del cliente con accesos a sus rutinas y perfil.
+
+## Stack técnico
+
+- **React Native** + **Expo** para la app mobile.
+- **TypeScript** como lenguaje.
+- **Expo Router** para la navegación basada en archivos.
+- **Supabase** para autenticación y base de datos (Postgres en la nube).
+- **expo-secure-store** para guardar el token de sesión de forma segura.
 
 ## Estructura del proyecto
 
 ```
-PersonalTrainer/
-├── backend/    API REST en Node.js + Express
-├── database/   Script SQL para crear la base
-├── design/     Mockups de referencia (Stitch)
-└── mobile/     App mobile en React Native + Expo
+mobile/
+├── app/              # Pantallas (file-based routing de Expo Router)
+│   ├── (auth)/       # Login, Registro
+│   ├── (client)/     # Pantallas del cliente
+│   ├── (trainer)/    # Pantallas del entrenador
+│   └── preguntas/    # Onboarding
+├── components/       # Componentes reutilizables (botones, inputs)
+├── constants/        # Sistema de diseño (colores, tipografías, espaciados)
+├── context/          # AuthContext (manejo global de sesión)
+├── hooks/            # Hooks personalizados
+├── services/         # Servicios con datos mockeados (luego se conectan a Supabase)
+├── utils/            # Cliente de Supabase
+└── authStyle/        # Estilos compartidos del flujo de autenticación
 ```
 
-## Requisitos previos
+## Cómo correr el proyecto
 
-- Node.js v18 o superior
-- SQL Server instalado localmente
-- SQL Server Management Studio (SSMS)
-- App Expo Go instalada en el celular (para probar la app)
+### Requisitos
 
-## Setup del backend
+- Node.js instalado.
+- App **Expo Go** en el celular (Android o iOS).
+- Celular y computadora en la misma red WiFi.
 
-1. Crear la base de datos en SQL Server ejecutando el script `database/schema_personaltrainer.sql` en SSMS.
+### Pasos
 
-2. Crear un usuario SQL para la app (ejecutar en SSMS):
-
-```sql
-   USE master;
-   CREATE LOGIN trainer_app WITH PASSWORD = 'TU_PASSWORD_SEGURA';
-   USE PersonalTrainerDB;
-   CREATE USER trainer_app FOR LOGIN trainer_app;
-   ALTER ROLE db_owner ADD MEMBER trainer_app;
-```
-
-3. Habilitar TCP/IP en SQL Server Configuration Manager (puerto 1433). Reiniciar el servicio de SQL Server después del cambio.
-
-4. Instalar dependencias del backend:
+**1. Clonar el repo**
 
 ```bash
-   cd backend
-   npm install
+git clone https://github.com/sofisolerort/2026-1C-PersonalTrainer.git
+cd 2026-1C-PersonalTrainer/mobile
 ```
 
-5. Crear el archivo `.env` copiando `.env.example` y completar con los valores reales (usuario SQL, password, etc.).
-
-6. Levantar el servidor:
+**2. Instalar dependencias**
 
 ```bash
-   npm run dev
+npm install
 ```
 
-El servidor corre en `http://localhost:3000`.
+**3. Configurar variables de entorno**
 
-7. Verificar que todo funciona abriendo en el navegador:
-
-```
-   http://localhost:3000/api/status
-```
-
-Debería devolver:
-
-```json
-{
-  "mensaje": "Backend funcionando",
-  "conexionBD": "OK"
-}
-```
-
-## Setup del mobile
-
-1. Instalar dependencias:
+Copiar `.env.example` y renombrarlo a `.env`:
 
 ```bash
-   cd mobile
-   npm install
+cp .env.example .env
 ```
 
-2. Levantar el proyecto:
+Pedirle al equipo las credenciales reales de Supabase y completarlas en el `.env`.
+
+**4. Arrancar el servidor de desarrollo**
 
 ```bash
-   npx expo start
+npx expo start
 ```
 
-3. Abrir la app en el celular:
-   - Tu computadora y tu celular deben estar en la **misma red WiFi**.
-   - Abrir la app **Expo Go** en el celular.
-   - Escanear el código QR que aparece en la terminal.
+**5. Abrir la app**
 
-## Endpoints implementados
+Escanear el código QR que aparece en la terminal con la app **Expo Go** en el celular.
 
-- `GET /api/status` — verifica que el servidor y la conexión a la base estén funcionando.
+## Variables de entorno
+
+El archivo `.env` no se sube a Git (está en `.gitignore`) por seguridad. La plantilla `.env.example` muestra qué variables son necesarias:
+
+```
+EXPO_PUBLIC_SUPABASE_URL=
+EXPO_PUBLIC_SUPABASE_ANON_KEY=
+```
+
+Estas se piden al equipo por fuera del repo.
+
+## Autores
+
+- **Sofía Soler**
+- **Agustín Quinteros**
