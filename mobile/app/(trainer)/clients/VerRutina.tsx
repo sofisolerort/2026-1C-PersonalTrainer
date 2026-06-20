@@ -101,7 +101,7 @@ export default function VerRutina() {
         <TouchableOpacity
           onPress={() =>
             router.push({
-              pathname: "/(trainer)/clients/EditarRutina",
+              pathname: "/(trainer)/clients/EditarInfoGeneral",
               params: { clientId },
             } as any)
           }
