@@ -5,16 +5,18 @@ import {
   StyleSheet,
   ActivityIndicator,
   TouchableOpacity,
+  TextStyle,
 } from "react-native";
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import { supabase } from "../../../utils/Supabase";
+import { COLORS, SPACING, RADIUS, TYPOGRAPHY } from "@/constants/theme";
 
 type ClientProfile = {
   id: string;
-  nombre_completo: string;
-  objetivo: string;
-  nivel: string;
-  cant_dias_que_entrena: number;
+  full_name: string;
+  objective: string;
+  level: string;
+  training_days: number;
 };
 
 export default function ClientDetail() {
@@ -43,14 +45,11 @@ export default function ClientDetail() {
     if (!error && data) {
       setClient(data);
 
-      const { data: routineData, error: routineError } = await supabase
+      const { data: routineData } = await supabase
         .from("routines")
         .select("id")
         .eq("client_id", id)
         .maybeSingle();
-
-      console.log("routineData:", routineData);
-      console.log("routineError:", routineError);
 
       setHasRoutine(!!routineData);
     }
@@ -61,7 +60,7 @@ export default function ClientDetail() {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" color={COLORS.primary} />
       </View>
     );
   }
@@ -69,20 +68,18 @@ export default function ClientDetail() {
   if (!client) {
     return (
       <View style={styles.center}>
-        <Text>Cliente no encontrado</Text>
+        <Text style={styles.notFound}>Cliente no encontrado</Text>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{client.nombre_completo}</Text>
+      <Text style={styles.title}>{client.full_name}</Text>
 
-      <Text style={styles.info}>Objetivo: {client.objetivo}</Text>
-      <Text style={styles.info}>Nivel: {client.nivel}</Text>
-      <Text style={styles.info}>
-        Días por semana: {client.cant_dias_que_entrena}
-      </Text>
+      <Text style={styles.info}>Objetivo: {client.objective}</Text>
+      <Text style={styles.info}>Nivel: {client.level}</Text>
+      <Text style={styles.info}>Días por semana: {client.training_days}</Text>
 
       {!hasRoutine ? (
         <TouchableOpacity
@@ -97,19 +94,17 @@ export default function ClientDetail() {
           <Text style={styles.buttonText}>Crear Rutina</Text>
         </TouchableOpacity>
       ) : (
-        <>
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() =>
-              router.push({
-                pathname: "/(trainer)/clients/VerRutina",
-                params: { clientId: client.id },
-              } as any)
-            }
-          >
-            <Text style={styles.buttonText}>Ver Rutina</Text>
-          </TouchableOpacity>
-        </>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() =>
+            router.push({
+              pathname: "/(trainer)/clients/VerRutina",
+              params: { clientId: client.id },
+            } as any)
+          }
+        >
+          <Text style={styles.buttonText}>Ver Rutina</Text>
+        </TouchableOpacity>
       )}
     </View>
   );
@@ -118,34 +113,38 @@ export default function ClientDetail() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    padding: SPACING.lg,
+    backgroundColor: COLORS.background,
   },
   center: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: COLORS.background,
   },
   title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    marginBottom: 20,
+    ...(TYPOGRAPHY.h2 as TextStyle),
+    color: COLORS.onSurface,
+    marginBottom: SPACING.lg,
   },
   info: {
-    fontSize: 18,
-    marginBottom: 10,
+    ...(TYPOGRAPHY.bodyLg as TextStyle),
+    color: COLORS.onSurfaceVariant,
+    marginBottom: SPACING.sm,
+  },
+  notFound: {
+    ...(TYPOGRAPHY.bodyMd as TextStyle),
+    color: COLORS.onSurfaceVariant,
   },
   button: {
-    marginTop: 20,
-    backgroundColor: "#2563EB",
-    padding: 16,
-    borderRadius: 12,
-  },
-  editButton: {
-    backgroundColor: "#F59E0B",
+    marginTop: SPACING.lg,
+    backgroundColor: COLORS.primary,
+    padding: SPACING.md,
+    borderRadius: RADIUS.md,
   },
   buttonText: {
-    color: "white",
+    ...(TYPOGRAPHY.button as TextStyle),
+    color: COLORS.onPrimary,
     textAlign: "center",
-    fontWeight: "bold",
   },
 });

@@ -3,12 +3,12 @@ import { useState } from "react";
 import { Alert } from "react-native";
 
 type FormData = {
-  nombre_completo: string;
-  fecha_nacimiento: string; // YYYY-MM-DD
-  cant_dias_que_entrena: number;
-  lugar_entrenamiento: string;
-  objetivo: string;
-  nivel: string;
+  full_name: string;
+  birth_date: string; // YYYY-MM-DD
+  training_days: number;
+  training_place: string;
+  objective: string;
+  level: string;
 };
 
 type RegisterData = {
@@ -16,27 +16,25 @@ type RegisterData = {
   password: string;
 };
 
-const DEFAULT_TRAINER_ID = "d70a6f20-7099-4730-b980-61ed8e764bf2";
-
 export const useRegister2 = (registerData: RegisterData) => {
   const [form, setForm] = useState<FormData>({
-    nombre_completo: "",
-    fecha_nacimiento: "",
-    cant_dias_que_entrena: 3,
-    lugar_entrenamiento: "gym",
-    objetivo: "perdida de peso",
-    nivel: "principiante",
+    full_name: "",
+    birth_date: "",
+    training_days: 3,
+    training_place: "gym",
+    objective: "perdida de peso",
+    level: "principiante",
   });
 
   const [loading, setLoading] = useState(false);
 
-  const [errors, setErrors] = useState<
-    Partial<Record<keyof FormData, string>>
-  >({});
+  const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>(
+    {},
+  );
 
   const updateField = <K extends keyof FormData>(
     field: K,
-    value: FormData[K]
+    value: FormData[K],
   ) => {
     setForm((prev) => ({ ...prev, [field]: value }));
 
@@ -51,31 +49,28 @@ export const useRegister2 = (registerData: RegisterData) => {
   const validate = (): boolean => {
     const newErrors: Partial<Record<keyof FormData, string>> = {};
 
-    if (!form.nombre_completo.trim()) {
-      newErrors.nombre_completo = "Nombre completo requerido";
+    if (!form.full_name.trim()) {
+      newErrors.full_name = "Nombre completo requerido";
     }
 
-    if (!form.fecha_nacimiento) {
-      newErrors.fecha_nacimiento = "Fecha de nacimiento requerida";
+    if (!form.birth_date) {
+      newErrors.birth_date = "Fecha de nacimiento requerida";
     }
 
-    if (
-      form.cant_dias_que_entrena < 1 ||
-      form.cant_dias_que_entrena > 6
-    ) {
-      newErrors.cant_dias_que_entrena = "Selecciona entre 1 y 6 días";
+    if (form.training_days < 1 || form.training_days > 6) {
+      newErrors.training_days = "Selecciona entre 1 y 6 días";
     }
 
-    if (!form.lugar_entrenamiento) {
-      newErrors.lugar_entrenamiento = "Selecciona un lugar";
+    if (!form.training_place) {
+      newErrors.training_place = "Selecciona un lugar";
     }
 
-    if (!form.objetivo) {
-      newErrors.objetivo = "Selecciona un objetivo";
+    if (!form.objective) {
+      newErrors.objective = "Selecciona un objetivo";
     }
 
-    if (!form.nivel) {
-      newErrors.nivel = "Selecciona un nivel";
+    if (!form.level) {
+      newErrors.level = "Selecciona un nivel";
     }
 
     setErrors(newErrors);
@@ -90,11 +85,12 @@ export const useRegister2 = (registerData: RegisterData) => {
 
     try {
       // 1) Crear usuario en auth
-      const { data: authData, error: signUpError } =
-        await supabase.auth.signUp({
+      const { data: authData, error: signUpError } = await supabase.auth.signUp(
+        {
           email: registerData.email,
           password: registerData.password,
-        });
+        },
+      );
 
       if (signUpError) {
         throw new Error(signUpError.message);
@@ -105,45 +101,45 @@ export const useRegister2 = (registerData: RegisterData) => {
       }
 
       // 2) Login automático
-      const { error: signInError } =
-        await supabase.auth.signInWithPassword({
-          email: registerData.email,
-          password: registerData.password,
-        });
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: registerData.email,
+        password: registerData.password,
+      });
 
       if (signInError) {
-        throw new Error(
-          `Error al iniciar sesión: ${signInError.message}`
-        );
+        throw new Error(`Error al iniciar sesión: ${signInError.message}`);
       }
 
-      // 3) Crear perfil
-      const { error: profileError } = await supabase
+      // 3) Buscar al entrenador por rol. Si todavía no existe ningún entrenador (ej: al registrar al propio trainer), trainer_id queda null.
+      const { data: trainer } = await supabase
         .from("profiles")
-        .insert({
-          id: authData.user.id,
-          email: registerData.email,
-          nombre_completo: form.nombre_completo,
-          fecha_nacimiento: form.fecha_nacimiento,
-          role: "cliente",
-          trainer_id: DEFAULT_TRAINER_ID,
+        .select("id")
+        .eq("role", "entrenador")
+        .limit(1)
+        .maybeSingle();
 
-          cant_dias_que_entrena: form.cant_dias_que_entrena,
-          lugar_entrenamiento: form.lugar_entrenamiento,
-          objetivo: form.objetivo,
-          nivel: form.nivel,
-        });
+      const trainerId = trainer?.id ?? null;
+
+      // 4) Crear perfil
+      const { error: profileError } = await supabase.from("profiles").insert({
+        id: authData.user.id,
+        email: registerData.email,
+        full_name: form.full_name,
+        birth_date: form.birth_date,
+        role: "cliente",
+        trainer_id: trainerId,
+
+        training_days: form.training_days,
+        training_place: form.training_place,
+        objective: form.objective,
+        level: form.level,
+      });
 
       if (profileError) {
-        throw new Error(
-          `Error al guardar perfil: ${profileError.message}`
-        );
+        throw new Error(`Error al guardar perfil: ${profileError.message}`);
       }
 
-      Alert.alert(
-        "Éxito",
-        "Registro completado. Serás redirigido al inicio."
-      );
+      Alert.alert("Éxito", "Registro completado. Serás redirigido al inicio.");
 
       onSuccess();
     } catch (error: any) {

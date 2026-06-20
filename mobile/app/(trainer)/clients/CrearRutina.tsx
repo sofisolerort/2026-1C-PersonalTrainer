@@ -6,43 +6,38 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  TextStyle,
 } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { supabase } from "../../../utils/Supabase";
+import { COLORS, SPACING, RADIUS, TYPOGRAPHY } from "@/constants/theme";
 
 export default function CrearRutina() {
   const { clientId } = useLocalSearchParams();
-  console.log("CREATE clientId:", clientId);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
 
   const createRoutine = async () => {
     try {
-      console.log("=== INICIO createRoutine ===");
-
       if (!title.trim()) {
         Alert.alert("Error", "Ingresá un título");
         return;
       }
 
-      // STEP 1: traer cliente
+      // STEP 1: traer cliente (para saber cuántos días entrena)
       const { data: clientData, error: clientError } = await supabase
         .from("profiles")
-        .select("cant_dias_que_entrena")
+        .select("training_days")
         .eq("id", clientId)
         .single();
-
-      console.log("clientData:", clientData);
-      console.log("clientError:", clientError);
 
       if (clientError) {
         Alert.alert("Error cliente", clientError.message);
         return;
       }
 
-      const dias = clientData?.cant_dias_que_entrena;
-      console.log("Dias del cliente:", dias);
+      const dias = clientData?.training_days;
 
       // STEP 2: crear rutina
       const { data: routineData, error: routineError } = await supabase
@@ -54,9 +49,6 @@ export default function CrearRutina() {
         })
         .select()
         .single();
-
-      console.log("routineData:", routineData);
-      console.log("routineError:", routineError);
 
       if (routineError) {
         Alert.alert("Error rutina", routineError.message);
@@ -74,27 +66,20 @@ export default function CrearRutina() {
         });
       }
 
-      console.log("daysToInsert:", daysToInsert);
-
       // STEP 4: insertar días
-      const { data: insertedDays, error: daysError } = await supabase
+      const { error: daysError } = await supabase
         .from("routine_days")
         .insert(daysToInsert)
         .select();
-
-      console.log("insertedDays:", insertedDays);
-      console.log("daysError:", daysError);
 
       if (daysError) {
         Alert.alert("Error días", daysError.message);
         return;
       }
 
-      console.log("=== FIN OK ===");
       Alert.alert("Éxito", "Rutina y días creados");
       router.back();
     } catch (error: any) {
-      console.log("CATCH ERROR:", error);
       Alert.alert("Error inesperado", error.message);
     }
   };
@@ -105,6 +90,7 @@ export default function CrearRutina() {
 
       <TextInput
         placeholder="Título"
+        placeholderTextColor={COLORS.onSurfaceVariant}
         value={title}
         onChangeText={setTitle}
         style={styles.input}
@@ -112,6 +98,7 @@ export default function CrearRutina() {
 
       <TextInput
         placeholder="Descripción"
+        placeholderTextColor={COLORS.onSurfaceVariant}
         value={description}
         onChangeText={setDescription}
         style={styles.input}
@@ -125,27 +112,34 @@ export default function CrearRutina() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20 },
+  container: {
+    flex: 1,
+    padding: SPACING.lg,
+    backgroundColor: COLORS.background,
+  },
   title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    marginBottom: 20,
+    ...(TYPOGRAPHY.h2 as TextStyle),
+    color: COLORS.onSurface,
+    marginBottom: SPACING.lg,
   },
   input: {
+    ...(TYPOGRAPHY.bodyMd as TextStyle),
     borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 16,
+    borderColor: COLORS.outlineVariant,
+    borderRadius: RADIUS.md,
+    padding: SPACING.md,
+    marginBottom: SPACING.md,
+    backgroundColor: COLORS.surface,
+    color: COLORS.onSurface,
   },
   button: {
-    backgroundColor: "#2563EB",
-    padding: 16,
-    borderRadius: 12,
+    backgroundColor: COLORS.primary,
+    padding: SPACING.md,
+    borderRadius: RADIUS.md,
   },
   buttonText: {
-    color: "white",
+    ...(TYPOGRAPHY.button as TextStyle),
+    color: COLORS.onPrimary,
     textAlign: "center",
-    fontWeight: "bold",
   },
 });

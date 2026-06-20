@@ -6,12 +6,14 @@ import {
   StyleSheet,
   ScrollView,
   Alert,
+  TextStyle,
 } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { Picker } from "@react-native-picker/picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useState } from "react";
 import { useRegister2 } from "../../hooks/auth/useRegister2";
+import { COLORS, SPACING, RADIUS, TYPOGRAPHY } from "@/constants/theme";
 
 export default function RegisterStep2() {
   const { email, password } = useLocalSearchParams<{
@@ -33,21 +35,16 @@ export default function RegisterStep2() {
     setShowDatePicker(false);
     if (selectedDate) {
       const formatted = selectedDate.toISOString().split("T")[0];
-      updateField("fecha_nacimiento", formatted);
+      updateField("birth_date", formatted);
     }
   };
 
   const handleFinalRegister = async () => {
     try {
-      // Llamamos al hook; el callback se ejecuta SOLO si el registro fue exitoso
       await registerComplete(() => {
-        // Redirigir directamente al login (ya que el hook hizo signIn automático,
-        // pero por seguridad llevamos al login para que refresque el contexto)
         router.replace("/(auth)/Login");
       });
     } catch (error: any) {
-      // Si el hook lanza un error (poco probable porque ya maneja Alert internamente),
-      // mostramos un mensaje genérico.
       Alert.alert(
         "Error",
         error?.message || "No se pudo completar el registro",
@@ -62,13 +59,12 @@ export default function RegisterStep2() {
       <Text style={styles.label}>Nombre completo</Text>
       <TextInput
         style={styles.input}
-        value={form.nombre_completo}
-        onChangeText={(v) => updateField("nombre_completo", v)}
+        value={form.full_name}
+        onChangeText={(v) => updateField("full_name", v)}
         placeholder="Juan Pérez"
+        placeholderTextColor={COLORS.onSurfaceVariant}
       />
-      {errors.nombre_completo && (
-        <Text style={styles.error}>{errors.nombre_completo}</Text>
-      )}
+      {errors.full_name && <Text style={styles.error}>{errors.full_name}</Text>}
 
       <Text style={styles.label}>Fecha de nacimiento</Text>
       <TouchableOpacity
@@ -76,45 +72,41 @@ export default function RegisterStep2() {
         onPress={() => setShowDatePicker(true)}
       >
         <Text
-          style={
-            form.fecha_nacimiento ? styles.dateText : styles.placeholderText
-          }
+          style={form.birth_date ? styles.dateText : styles.placeholderText}
         >
-          {form.fecha_nacimiento || "Seleccionar fecha"}
+          {form.birth_date || "Seleccionar fecha"}
         </Text>
       </TouchableOpacity>
       {showDatePicker && (
         <DateTimePicker
-          value={
-            form.fecha_nacimiento ? new Date(form.fecha_nacimiento) : new Date()
-          }
+          value={form.birth_date ? new Date(form.birth_date) : new Date()}
           mode="date"
           display="default"
           onChange={onDateChange}
         />
       )}
-      {errors.fecha_nacimiento && (
-        <Text style={styles.error}>{errors.fecha_nacimiento}</Text>
+      {errors.birth_date && (
+        <Text style={styles.error}>{errors.birth_date}</Text>
       )}
 
       <Text style={styles.label}>Días que entrenas por semana (1-6)</Text>
       <Picker
-        selectedValue={form.cant_dias_que_entrena}
-        onValueChange={(v) => updateField("cant_dias_que_entrena", v)}
+        selectedValue={form.training_days}
+        onValueChange={(v) => updateField("training_days", v)}
         style={styles.picker}
       >
         {[1, 2, 3, 4, 5, 6].map((d) => (
           <Picker.Item key={d} label={d.toString()} value={d} />
         ))}
       </Picker>
-      {errors.cant_dias_que_entrena && (
-        <Text style={styles.error}>{errors.cant_dias_que_entrena}</Text>
+      {errors.training_days && (
+        <Text style={styles.error}>{errors.training_days}</Text>
       )}
 
       <Text style={styles.label}>Lugar de entrenamiento</Text>
       <Picker
-        selectedValue={form.lugar_entrenamiento}
-        onValueChange={(v) => updateField("lugar_entrenamiento", v)}
+        selectedValue={form.training_place}
+        onValueChange={(v) => updateField("training_place", v)}
         style={styles.picker}
       >
         <Picker.Item label="Gimnasio" value="gym" />
@@ -124,8 +116,8 @@ export default function RegisterStep2() {
 
       <Text style={styles.label}>Objetivo principal</Text>
       <Picker
-        selectedValue={form.objetivo}
-        onValueChange={(v) => updateField("objetivo", v)}
+        selectedValue={form.objective}
+        onValueChange={(v) => updateField("objective", v)}
         style={styles.picker}
       >
         <Picker.Item label="Pérdida de peso" value="perdida de peso" />
@@ -141,8 +133,8 @@ export default function RegisterStep2() {
 
       <Text style={styles.label}>Nivel</Text>
       <Picker
-        selectedValue={form.nivel}
-        onValueChange={(v) => updateField("nivel", v)}
+        selectedValue={form.level}
+        onValueChange={(v) => updateField("level", v)}
         style={styles.picker}
       >
         <Picker.Item label="Principiante" value="principiante" />
@@ -166,67 +158,69 @@ export default function RegisterStep2() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    backgroundColor: "#fff",
+    padding: SPACING.lg,
+    backgroundColor: COLORS.background,
   },
   title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
+    ...(TYPOGRAPHY.h3 as TextStyle),
+    color: COLORS.onSurface,
+    marginBottom: SPACING.lg,
     textAlign: "center",
   },
   label: {
-    fontSize: 16,
+    ...(TYPOGRAPHY.bodyMd as TextStyle),
     fontWeight: "600",
-    marginTop: 15,
-    marginBottom: 5,
+    color: COLORS.onSurface,
+    marginTop: SPACING.md,
+    marginBottom: SPACING.xs,
   },
   input: {
+    ...(TYPOGRAPHY.bodyMd as TextStyle),
     borderWidth: 1,
-    borderColor: "#ccc",
-    padding: 10,
-    borderRadius: 8,
-    fontSize: 16,
+    borderColor: COLORS.outlineVariant,
+    padding: SPACING.md,
+    borderRadius: RADIUS.md,
+    backgroundColor: COLORS.surface,
+    color: COLORS.onSurface,
   },
   dateButton: {
     borderWidth: 1,
-    borderColor: "#ccc",
-    padding: 12,
-    borderRadius: 8,
-    backgroundColor: "#f9f9f9",
+    borderColor: COLORS.outlineVariant,
+    padding: SPACING.md,
+    borderRadius: RADIUS.md,
+    backgroundColor: COLORS.surfaceContainer,
   },
   dateText: {
-    color: "#000",
-    fontSize: 16,
+    ...(TYPOGRAPHY.bodyMd as TextStyle),
+    color: COLORS.onSurface,
   },
   placeholderText: {
-    color: "#aaa",
-    fontSize: 16,
+    ...(TYPOGRAPHY.bodyMd as TextStyle),
+    color: COLORS.onSurfaceVariant,
   },
   picker: {
     borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
+    borderColor: COLORS.outlineVariant,
+    borderRadius: RADIUS.md,
   },
   error: {
-    color: "red",
-    fontSize: 14,
-    marginTop: 4,
+    ...(TYPOGRAPHY.bodySm as TextStyle),
+    color: COLORS.error,
+    marginTop: SPACING.xs,
   },
   button: {
-    backgroundColor: "#007AFF",
-    padding: 15,
-    borderRadius: 8,
+    backgroundColor: COLORS.primary,
+    padding: SPACING.md,
+    borderRadius: RADIUS.md,
     alignItems: "center",
-    marginTop: 30,
-    marginBottom: 50,
+    marginTop: SPACING.xl,
+    marginBottom: SPACING.xxl,
   },
   buttonDisabled: {
-    backgroundColor: "#99ccff",
+    backgroundColor: COLORS.primaryLight,
   },
   buttonText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "bold",
+    ...(TYPOGRAPHY.button as TextStyle),
+    color: COLORS.onPrimary,
   },
 });
