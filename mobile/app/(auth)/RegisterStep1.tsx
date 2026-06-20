@@ -1,15 +1,14 @@
-// app/(auth)/register-step-1.tsx
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
+  TextStyle,
 } from "react-native";
-
 import { router } from "expo-router";
 import { useRegister1 } from "../../hooks/auth/useRegister1";
+import { COLORS, SPACING, RADIUS, TYPOGRAPHY } from "@/constants/theme";
 
 export default function RegisterStep1() {
   const {
@@ -25,7 +24,6 @@ export default function RegisterStep1() {
 
   const handleNext = () => {
     if (validate()) {
-      // Navegar al paso 2 llevando los datos
       router.push({
         pathname: "/(auth)/RegisterStep2",
         params: { email, password },
@@ -40,6 +38,7 @@ export default function RegisterStep1() {
       <TextInput
         style={styles.input}
         placeholder="Email"
+        placeholderTextColor={COLORS.onSurfaceVariant}
         value={email}
         onChangeText={setEmail}
         autoCapitalize="none"
@@ -50,6 +49,7 @@ export default function RegisterStep1() {
       <TextInput
         style={styles.input}
         placeholder="Contraseña"
+        placeholderTextColor={COLORS.onSurfaceVariant}
         secureTextEntry
         value={password}
         onChangeText={setPassword}
@@ -59,6 +59,7 @@ export default function RegisterStep1() {
       <TextInput
         style={styles.input}
         placeholder="Repetir contraseña"
+        placeholderTextColor={COLORS.onSurfaceVariant}
         secureTextEntry
         value={confirmPassword}
         onChangeText={setConfirmPassword}
@@ -79,28 +80,48 @@ export default function RegisterStep1() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", padding: 20 },
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    padding: SPACING.lg,
+    backgroundColor: COLORS.background,
+  },
   title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
+    ...(TYPOGRAPHY.h3 as TextStyle),
+    color: COLORS.onSurface,
+    marginBottom: SPACING.lg,
     textAlign: "center",
   },
   input: {
+    ...(TYPOGRAPHY.bodyMd as TextStyle),
     borderWidth: 1,
-    borderColor: "#ccc",
-    padding: 10,
-    marginBottom: 5,
-    borderRadius: 8,
+    borderColor: COLORS.outlineVariant,
+    padding: SPACING.md,
+    marginBottom: SPACING.xs,
+    borderRadius: RADIUS.md,
+    backgroundColor: COLORS.surface,
+    color: COLORS.onSurface,
   },
-  error: { color: "red", fontSize: 12, marginBottom: 10 },
+  error: {
+    ...(TYPOGRAPHY.bodySm as TextStyle),
+    color: COLORS.error,
+    marginBottom: SPACING.sm,
+  },
   button: {
-    backgroundColor: "#3b82f6",
-    padding: 12,
-    borderRadius: 8,
+    backgroundColor: COLORS.primary,
+    padding: SPACING.md,
+    borderRadius: RADIUS.md,
     alignItems: "center",
-    marginTop: 10,
+    marginTop: SPACING.sm,
   },
-  buttonText: { color: "white", fontWeight: "bold" },
-  link: { marginTop: 15, textAlign: "center", color: "#3b82f6" },
+  buttonText: {
+    ...(TYPOGRAPHY.button as TextStyle),
+    color: COLORS.onPrimary,
+  },
+  link: {
+    ...(TYPOGRAPHY.bodyMd as TextStyle),
+    marginTop: SPACING.md,
+    textAlign: "center",
+    color: COLORS.primary,
+  },
 });

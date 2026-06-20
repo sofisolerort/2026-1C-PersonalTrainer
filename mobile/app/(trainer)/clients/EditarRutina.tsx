@@ -7,9 +7,11 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
+  TextStyle,
 } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { supabase } from "../../../utils/Supabase";
+import { COLORS, SPACING, RADIUS, TYPOGRAPHY } from "@/constants/theme";
 
 export default function EditarRutina() {
   const { clientId } = useLocalSearchParams();
@@ -70,18 +72,19 @@ export default function EditarRutina() {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" color={COLORS.primary} />
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Editar info general de la  Rutina</Text>
+      <Text style={styles.title}>Editar info general de la Rutina</Text>
 
       <TextInput
         style={styles.input}
         placeholder="Título"
+        placeholderTextColor={COLORS.onSurfaceVariant}
         value={title}
         onChangeText={setTitle}
       />
@@ -89,6 +92,7 @@ export default function EditarRutina() {
       <TextInput
         style={styles.input}
         placeholder="Descripción"
+        placeholderTextColor={COLORS.onSurfaceVariant}
         value={description}
         onChangeText={setDescription}
       />
@@ -103,33 +107,38 @@ export default function EditarRutina() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    padding: SPACING.lg,
+    backgroundColor: COLORS.background,
   },
   center: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: COLORS.background,
   },
   title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    marginBottom: 20,
+    ...(TYPOGRAPHY.h2 as TextStyle),
+    color: COLORS.onSurface,
+    marginBottom: SPACING.lg,
   },
   input: {
+    ...(TYPOGRAPHY.bodyMd as TextStyle),
     borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 16,
+    borderColor: COLORS.outlineVariant,
+    borderRadius: RADIUS.md,
+    padding: SPACING.md,
+    marginBottom: SPACING.md,
+    backgroundColor: COLORS.surface,
+    color: COLORS.onSurface,
   },
   button: {
-    backgroundColor: "#2563EB",
-    padding: 16,
-    borderRadius: 12,
+    backgroundColor: COLORS.primary,
+    padding: SPACING.md,
+    borderRadius: RADIUS.md,
   },
   buttonText: {
-    color: "white",
+    ...(TYPOGRAPHY.button as TextStyle),
+    color: COLORS.onPrimary,
     textAlign: "center",
-    fontWeight: "bold",
   },
 });

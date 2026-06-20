@@ -6,14 +6,18 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
+  TextStyle,
 } from "react-native";
-import {
-  useLocalSearchParams,
-  router,
-  useFocusEffect,
-} from "expo-router";
+import { useLocalSearchParams, router, useFocusEffect } from "expo-router";
 import { supabase } from "../../../utils/Supabase";
 import { MaterialIcons } from "@expo/vector-icons";
+import {
+  COLORS,
+  SPACING,
+  RADIUS,
+  SHADOWS,
+  TYPOGRAPHY,
+} from "@/constants/theme";
 
 type Routine = {
   id: string;
@@ -37,12 +41,10 @@ export default function VerRutina() {
   useFocusEffect(
     useCallback(() => {
       fetchRoutine();
-    }, [clientId])
+    }, [clientId]),
   );
 
   const fetchRoutine = async () => {
-    console.log("VIEW clientId:", clientId);
-
     setLoading(true);
 
     const { data, error } = await supabase
@@ -50,9 +52,6 @@ export default function VerRutina() {
       .select("*")
       .eq("client_id", clientId)
       .maybeSingle();
-
-    console.log("routine data:", data);
-    console.log("routine error:", error);
 
     if (error || !data) {
       setLoading(false);
@@ -67,9 +66,6 @@ export default function VerRutina() {
       .eq("routine_id", data.id)
       .order("day_number", { ascending: true });
 
-    console.log("days data:", daysData);
-    console.log("days error:", daysError);
-
     if (!daysError && daysData) {
       setDays(daysData);
     }
@@ -80,7 +76,7 @@ export default function VerRutina() {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" color={COLORS.primary} />
       </View>
     );
   }
@@ -88,7 +84,7 @@ export default function VerRutina() {
   if (!routine) {
     return (
       <View style={styles.center}>
-        <Text>Este cliente todavía no tiene rutina</Text>
+        <Text style={styles.muted}>Este cliente todavía no tiene rutina</Text>
       </View>
     );
   }
@@ -106,7 +102,7 @@ export default function VerRutina() {
             } as any)
           }
         >
-          <MaterialIcons name="edit" size={24} color="black" />
+          <MaterialIcons name="edit" size={24} color={COLORS.onSurface} />
         </TouchableOpacity>
       </View>
 
@@ -117,7 +113,7 @@ export default function VerRutina() {
       <Text style={styles.subtitle}>Días de entrenamiento</Text>
 
       {days.length === 0 ? (
-        <Text>No hay días cargados todavía</Text>
+        <Text style={styles.muted}>No hay días cargados todavía</Text>
       ) : (
         <FlatList
           data={days}
@@ -149,40 +145,50 @@ export default function VerRutina() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    padding: SPACING.lg,
+    backgroundColor: COLORS.background,
   },
   center: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: COLORS.background,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: SPACING.md,
   },
   title: {
-    fontSize: 28,
-    fontWeight: "bold",
+    ...(TYPOGRAPHY.h2 as TextStyle),
+    color: COLORS.onSurface,
   },
   description: {
-    fontSize: 16,
-    marginBottom: 24,
+    ...(TYPOGRAPHY.bodyMd as TextStyle),
+    color: COLORS.onSurfaceVariant,
+    marginBottom: SPACING.lg,
   },
   subtitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 16,
+    ...(TYPOGRAPHY.bodyLg as TextStyle),
+    fontWeight: "700",
+    color: COLORS.onSurface,
+    marginBottom: SPACING.md,
   },
   dayCard: {
-    padding: 16,
-    borderRadius: 12,
-    backgroundColor: "#E5E7EB",
-    marginBottom: 12,
+    padding: SPACING.md,
+    borderRadius: RADIUS.lg,
+    backgroundColor: COLORS.surface,
+    ...SHADOWS.card,
+    marginBottom: SPACING.md,
   },
   dayText: {
-    fontSize: 16,
+    ...(TYPOGRAPHY.bodyMd as TextStyle),
     fontWeight: "600",
+    color: COLORS.onSurface,
+  },
+  muted: {
+    ...(TYPOGRAPHY.bodyMd as TextStyle),
+    color: COLORS.onSurfaceVariant,
   },
 });

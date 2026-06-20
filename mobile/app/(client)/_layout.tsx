@@ -1,9 +1,9 @@
 import { Stack, Redirect } from "expo-router";
-
 import { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { supabase } from "../../utils/Supabase";
 import { useAuth } from "../../context/AuthContext";
+import { COLORS } from "@/constants/theme";
 
 export default function ClienteLayout() {
   const { session, isLoading } = useAuth();
@@ -27,8 +27,15 @@ export default function ClienteLayout() {
 
   if (isLoading || verificando) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" />
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: COLORS.background,
+        }}
+      >
+        <ActivityIndicator size="large" color={COLORS.primary} />
       </View>
     );
   }
@@ -40,8 +47,8 @@ export default function ClienteLayout() {
   return (
     <Stack
       screenOptions={{
-        headerStyle: { backgroundColor: "#3b82f6" },
-        headerTintColor: "white",
+        headerStyle: { backgroundColor: COLORS.primary },
+        headerTintColor: COLORS.onPrimary,
         headerTitleStyle: { fontWeight: "bold" },
       }}
     >

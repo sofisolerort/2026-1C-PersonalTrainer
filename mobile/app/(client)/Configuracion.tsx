@@ -1,6 +1,15 @@
-import { View, Text, Switch, StyleSheet, TouchableOpacity, Alert } from 'react-native';
-import { useState } from 'react';
-import { router } from 'expo-router';
+import {
+  View,
+  Text,
+  Switch,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  TextStyle,
+} from "react-native";
+import { useState } from "react";
+import { router } from "expo-router";
+import { COLORS, SPACING, RADIUS, TYPOGRAPHY } from "@/constants/theme";
 
 export default function ConfiguracionCliente() {
   const [notificaciones, setNotificaciones] = useState(true);
@@ -16,7 +25,10 @@ export default function ConfiguracionCliente() {
         <Text style={styles.optionText}>Modo oscuro</Text>
         <Switch value={modoOscuro} onValueChange={setModoOscuro} />
       </View>
-      <TouchableOpacity style={styles.button} onPress={() => Alert.alert('Guardado', 'Preferencias actualizadas')}>
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => Alert.alert("Guardado", "Preferencias actualizadas")}
+      >
         <Text style={styles.buttonText}>Guardar configuración</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
@@ -27,11 +39,38 @@ export default function ConfiguracionCliente() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5', padding: 20 },
-  option: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'white', padding: 15, borderRadius: 10, marginBottom: 15 },
-  optionText: { fontSize: 16 },
-  button: { backgroundColor: '#3b82f6', padding: 14, borderRadius: 10, alignItems: 'center', marginTop: 20 },
-  buttonText: { color: 'white', fontWeight: 'bold' },
-  backButton: { marginTop: 20, alignItems: 'center' },
-  backText: { color: '#3b82f6', fontSize: 16 },
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+    padding: SPACING.lg,
+  },
+  option: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: COLORS.surface,
+    padding: SPACING.md,
+    borderRadius: RADIUS.md,
+    marginBottom: SPACING.md,
+  },
+  optionText: {
+    ...(TYPOGRAPHY.bodyMd as TextStyle),
+    color: COLORS.onSurface,
+  },
+  button: {
+    backgroundColor: COLORS.primary,
+    padding: SPACING.md,
+    borderRadius: RADIUS.md,
+    alignItems: "center",
+    marginTop: SPACING.lg,
+  },
+  buttonText: {
+    ...(TYPOGRAPHY.button as TextStyle),
+    color: COLORS.onPrimary,
+  },
+  backButton: { marginTop: SPACING.lg, alignItems: "center" },
+  backText: {
+    ...(TYPOGRAPHY.bodyMd as TextStyle),
+    color: COLORS.primary,
+  },
 });

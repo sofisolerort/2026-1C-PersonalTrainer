@@ -7,11 +7,12 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
+  TextStyle,
 } from "react-native";
-
 import { router } from "expo-router";
 import { useAuth } from "../../context/AuthContext";
 import { supabase } from "../../utils/Supabase";
+import { COLORS, SPACING, RADIUS, TYPOGRAPHY } from "@/constants/theme";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -54,7 +55,6 @@ export default function Login() {
     } else if (userRole === "cliente") {
       router.replace("/(client)/Home");
     } else {
-      // Si no tiene rol, mandar al login para que el index lo maneje
       Alert.alert(
         "Aviso",
         "Tu cuenta no tiene un rol asignado. Contactá al administrador.",
@@ -68,6 +68,7 @@ export default function Login() {
       <Text style={styles.title}>Iniciar Sesión</Text>
       <TextInput
         placeholder="Email"
+        placeholderTextColor={COLORS.onSurfaceVariant}
         value={email}
         onChangeText={setEmail}
         style={styles.input}
@@ -76,6 +77,7 @@ export default function Login() {
       />
       <TextInput
         placeholder="Contraseña"
+        placeholderTextColor={COLORS.onSurfaceVariant}
         secureTextEntry
         value={password}
         onChangeText={setPassword}
@@ -88,7 +90,7 @@ export default function Login() {
         disabled={loading}
       >
         {loading ? (
-          <ActivityIndicator color="white" />
+          <ActivityIndicator color={COLORS.onPrimary} />
         ) : (
           <Text style={styles.buttonText}>Ingresar</Text>
         )}
@@ -104,27 +106,43 @@ export default function Login() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", padding: 20 },
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    padding: SPACING.lg,
+    backgroundColor: COLORS.background,
+  },
   title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
+    ...(TYPOGRAPHY.h3 as TextStyle),
+    color: COLORS.onSurface,
+    marginBottom: SPACING.lg,
     textAlign: "center",
   },
   input: {
+    ...(TYPOGRAPHY.bodyMd as TextStyle),
     borderWidth: 1,
-    borderColor: "#ccc",
-    padding: 10,
-    marginBottom: 15,
-    borderRadius: 8,
+    borderColor: COLORS.outlineVariant,
+    padding: SPACING.md,
+    marginBottom: SPACING.md,
+    borderRadius: RADIUS.md,
+    backgroundColor: COLORS.surface,
+    color: COLORS.onSurface,
   },
   button: {
-    backgroundColor: "#3b82f6",
-    padding: 12,
-    borderRadius: 8,
+    backgroundColor: COLORS.primary,
+    padding: SPACING.md,
+    borderRadius: RADIUS.md,
     alignItems: "center",
   },
   buttonDisabled: { opacity: 0.6 },
-  buttonText: { color: "white", fontWeight: "bold" },
-  link: { marginTop: 15, textAlign: "center", color: "#3b82f6" },
+  buttonText: {
+    ...(TYPOGRAPHY.button as TextStyle),
+    color: COLORS.onPrimary,
+  },
+  link: {
+    ...(TYPOGRAPHY.bodyMd as TextStyle),
+    marginTop: SPACING.md,
+    textAlign: "center",
+    color: COLORS.primary,
+  },
 });
