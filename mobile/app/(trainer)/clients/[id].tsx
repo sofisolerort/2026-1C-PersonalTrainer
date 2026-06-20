@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -6,7 +6,7 @@ import {
   ActivityIndicator,
   TouchableOpacity,
 } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import { supabase } from "../../../utils/Supabase";
 
 type ClientProfile = {
@@ -25,9 +25,11 @@ export default function ClientDetail() {
   const [hasRoutine, setHasRoutine] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchClient();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchClient();
+    }, [id]),
+  );
 
   const fetchClient = async () => {
     setLoading(true);
@@ -107,8 +109,6 @@ export default function ClientDetail() {
           >
             <Text style={styles.buttonText}>Ver Rutina</Text>
           </TouchableOpacity>
-
-        
         </>
       )}
     </View>
