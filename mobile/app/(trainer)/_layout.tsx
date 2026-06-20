@@ -1,30 +1,11 @@
 import { Stack, Redirect } from "expo-router";
-import { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
-import { supabase } from "../../utils/Supabase";
 import { useAuth } from "../../context/AuthContext";
 
 export default function TrainerLayout() {
-  const { session, isLoading } = useAuth();
-  const [rol, setRol] = useState<string | null>(null);
-  const [verificando, setVerificando] = useState(true);
+  const { session, role, isLoading } = useAuth();
 
-  useEffect(() => {
-    const verificar = async () => {
-      if (session?.user) {
-        const { data } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", session.user.id)
-          .single();
-        setRol(data?.role || null);
-      }
-      setVerificando(false);
-    };
-    if (!isLoading) verificar();
-  }, [isLoading, session]);
-
-  if (isLoading || verificando) {
+  if (isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator size="large" />
@@ -32,7 +13,7 @@ export default function TrainerLayout() {
     );
   }
 
-  if (!session || rol !== "entrenador") {
+  if (!session || role !== "entrenador") {
     return <Redirect href="/(auth)/Login" />;
   }
 
@@ -44,7 +25,10 @@ export default function TrainerLayout() {
         headerTitleStyle: { fontWeight: "bold" },
       }}
     >
-      <Stack.Screen name="Home" options={{ title: "Panel del Entrenador" }} />
+      <Stack.Screen
+        name="Home"
+        options={{ title: "Panel del Entrenador" }}
+      />
     </Stack>
   );
 }

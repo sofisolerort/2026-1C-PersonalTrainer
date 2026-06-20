@@ -1,216 +1,134 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   View,
   Text,
-  ScrollView,
   StyleSheet,
-  Image,
+  ActivityIndicator,
+  FlatList,
   TouchableOpacity,
-  TextStyle,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
-
-import {
-  COLORS,
-  TYPOGRAPHY,
-  SPACING,
-  RADIUS,
-  SHADOWS,
-} from "@/constants/theme";
-import { getClientes, getMetricasTrainer } from "../../services/clientes";
+import { useRouter } from "expo-router";
 import { useAuth } from "../../context/AuthContext";
+import { supabase } from "../../utils/Supabase";
 
-export default function TrainerHome() {
-  const { signOut } = useAuth();
-  const [clientes, setClientes] = useState<any[]>([]);
-  const [metricas, setMetricas] = useState<any>(null);
+type Client = {
+  id: string;
+  nombre_completo: string;
+  objetivo: string;
+  nivel: string;
+};
+
+export default function Home() {
+  const { user, signOut } = useAuth();
+  const router = useRouter();
+
+  const [clients, setClients] = useState<Client[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getClientes().then((data: any) => setClientes(data));
-    getMetricasTrainer().then((data: any) => setMetricas(data));
-  }, []);
+    fetchClients();
+  }, [user]);
 
-  const handleLogout = async () => {
-    await signOut();
-    router.replace("/(auth)/Login");
+  const fetchClients = async () => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id, nombre_completo, objetivo, nivel")
+      .eq("role", "cliente")
+      .eq("trainer_id", user.id);
+
+    if (error) {
+      console.log("ERROR CLIENTS:", error);
+    } else {
+      setClients(data || []);
+    }
+
+    setLoading(false);
   };
 
-  if (!metricas) {
+  if (loading) {
     return (
-      <SafeAreaView style={styles.safeArea}>
-        <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Cargando...</Text>
-        </View>
-      </SafeAreaView>
+      <View style={styles.center}>
+        <ActivityIndicator size="large" />
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* HEADER */}
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>¡Hola, Coach!</Text>
-            <Text style={styles.subGreeting}>
-              Tenés {metricas.clientesActivos} clientes activos
-            </Text>
-          </View>
-          <Image
-            source={{ uri: "https://i.pravatar.cc/100?img=12" }}
-            style={styles.avatar}
-          />
-        </View>
+    <View style={styles.container}>
+      <Text style={styles.title}>Mis Clientes ({clients.length})</Text>
 
-        {/* MÉTRICA: solo clientes activos */}
-        <View style={styles.metricCardFull}>
-          <Text style={styles.metricNumber}>{metricas.clientesActivos}</Text>
-          <Text style={styles.metricLabel}>Clientes activos</Text>
-        </View>
+      <TouchableOpacity style={styles.logoutBtn} onPress={signOut}>
+        <Text style={styles.logoutText}>Cerrar sesión</Text>
+      </TouchableOpacity>
 
-        {/* LISTA DE CLIENTES */}
-        <Text style={styles.sectionTitle}>Mis clientes</Text>
-
-        {clientes.map((cliente: any) => (
-          <View key={cliente.id} style={styles.clienteCard}>
-            <View style={styles.clienteInfo}>
-              <Text style={styles.clienteNombre}>{cliente.nombre}</Text>
-              <Text style={styles.clienteObjetivo}>{cliente.objetivo}</Text>
-            </View>
-            <View style={styles.diasBadge}>
-              <Text style={styles.diasNumero}>{cliente.diasEntrenamiento}</Text>
-              <Text style={styles.diasLabel}>días/sem</Text>
-            </View>
-          </View>
-        ))}
-
-        {/* BOTÓN CERRAR SESIÓN */}
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutText}>Cerrar sesión</Text>
-        </TouchableOpacity>
-      </ScrollView>
-    </SafeAreaView>
+      <FlatList
+        data={clients}
+        keyExtractor={(item) => item.id}
+        ListEmptyComponent={
+          <Text style={styles.empty}>Todavía no tenés clientes</Text>
+        }
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            style={styles.card}
+            onPress={() =>
+              router.push(`/(trainer)/clients/${item.id}`)
+            }
+          >
+            <Text style={styles.name}>{item.nombre_completo}</Text>
+            <Text>Objetivo: {item.objetivo}</Text>
+            <Text>Nivel: {item.nivel}</Text>
+          </TouchableOpacity>
+        )}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    padding: 20,
   },
-  scrollContent: {
-    padding: SPACING.md,
-    gap: SPACING.lg,
-  },
-
-  // Loading
-  loadingContainer: {
+  center: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
-  loadingText: {
-    ...(TYPOGRAPHY.bodyMd as TextStyle),
-    color: COLORS.onSurfaceVariant,
+  title: {
+    fontSize: 28,
+    fontWeight: "bold",
+    marginBottom: 20,
   },
-
-  // Header
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  greeting: {
-    ...(TYPOGRAPHY.h2 as TextStyle),
-    color: COLORS.onSurface,
-  },
-  subGreeting: {
-    ...(TYPOGRAPHY.bodyMd as TextStyle),
-    color: COLORS.onSurfaceVariant,
-    marginTop: SPACING.xs,
-  },
-  avatar: {
-    width: 56,
-    height: 56,
-    borderRadius: RADIUS.full,
-  },
-
-  // Métrica única (ahora ocupa todo el ancho)
-  metricCardFull: {
-    backgroundColor: COLORS.surface,
-    borderRadius: RADIUS.lg,
-    padding: SPACING.lg,
-    alignItems: "center",
-    ...SHADOWS.card,
-  },
-  metricNumber: {
-    ...(TYPOGRAPHY.h1 as TextStyle),
-    color: COLORS.primary,
-  },
-  metricLabel: {
-    ...(TYPOGRAPHY.bodyMd as TextStyle),
-    color: COLORS.onSurfaceVariant,
-    textAlign: "center",
-    marginTop: SPACING.xs,
-  },
-
-  // Sección
-  sectionTitle: {
-    ...(TYPOGRAPHY.h3 as TextStyle),
-    color: COLORS.onSurface,
-  },
-
-  // Cliente card
-  clienteCard: {
-    backgroundColor: COLORS.surface,
-    borderRadius: RADIUS.lg,
-    padding: SPACING.lg,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    ...SHADOWS.card,
-  },
-  clienteInfo: {
-    flex: 1,
-  },
-  clienteNombre: {
-    ...(TYPOGRAPHY.bodyLg as TextStyle),
-    fontWeight: "600",
-    color: COLORS.onSurface,
-  },
-  clienteObjetivo: {
-    ...(TYPOGRAPHY.bodyMd as TextStyle),
-    color: COLORS.onSurfaceVariant,
-    marginTop: SPACING.xs,
-  },
-  diasBadge: {
-    backgroundColor: COLORS.primarySurface,
-    borderRadius: RADIUS.md,
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.sm,
-    alignItems: "center",
-    marginLeft: SPACING.md,
-  },
-  diasNumero: {
-    ...(TYPOGRAPHY.h3 as TextStyle),
-    color: COLORS.primary,
-  },
-  diasLabel: {
-    ...(TYPOGRAPHY.labelCaps as TextStyle),
-    color: COLORS.primary,
-  },
-
-  // Logout
-  logoutButton: {
-    backgroundColor: COLORS.error,
-    borderRadius: RADIUS.md,
-    padding: SPACING.md,
-    alignItems: "center",
-    marginTop: SPACING.lg,
+  logoutBtn: {
+    marginBottom: 20,
+    padding: 12,
+    backgroundColor: "#2563EB",
+    borderRadius: 10,
   },
   logoutText: {
-    ...(TYPOGRAPHY.button as TextStyle),
-    color: COLORS.onError,
+    color: "white",
+    textAlign: "center",
+    fontWeight: "bold",
+  },
+  card: {
+    padding: 16,
+    backgroundColor: "#f1f5f9",
+    borderRadius: 12,
+    marginBottom: 12,
+  },
+  name: {
+    fontWeight: "bold",
+    fontSize: 18,
+    marginBottom: 8,
+  },
+  empty: {
+    textAlign: "center",
+    marginTop: 40,
+    fontSize: 16,
   },
 });
