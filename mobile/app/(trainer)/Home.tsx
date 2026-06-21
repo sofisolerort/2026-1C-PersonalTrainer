@@ -6,16 +6,24 @@ import {
   ActivityIndicator,
   FlatList,
   TouchableOpacity,
+  TextStyle,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "../../context/AuthContext";
 import { supabase } from "../../utils/Supabase";
+import {
+  COLORS,
+  SPACING,
+  RADIUS,
+  SHADOWS,
+  TYPOGRAPHY,
+} from "@/constants/theme";
 
 type Client = {
   id: string;
-  nombre_completo: string;
-  objetivo: string;
-  nivel: string;
+  full_name: string;
+  objective: string;
+  level: string;
 };
 
 export default function Home() {
@@ -37,7 +45,7 @@ export default function Home() {
 
     const { data, error } = await supabase
       .from("profiles")
-      .select("id, nombre_completo, objetivo, nivel")
+      .select("id, full_name, objective, level")
       .eq("role", "cliente")
       .eq("trainer_id", user.id);
 
@@ -53,7 +61,7 @@ export default function Home() {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" color={COLORS.primary} />
       </View>
     );
   }
@@ -75,13 +83,11 @@ export default function Home() {
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.card}
-            onPress={() =>
-              router.push(`/(trainer)/clients/${item.id}`)
-            }
+            onPress={() => router.push(`/(trainer)/clients/${item.id}`)}
           >
-            <Text style={styles.name}>{item.nombre_completo}</Text>
-            <Text>Objetivo: {item.objetivo}</Text>
-            <Text>Nivel: {item.nivel}</Text>
+            <Text style={styles.name}>{item.full_name}</Text>
+            <Text style={styles.meta}>Objetivo: {item.objective}</Text>
+            <Text style={styles.meta}>Nivel: {item.level}</Text>
           </TouchableOpacity>
         )}
       />
@@ -92,43 +98,53 @@ export default function Home() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    padding: SPACING.lg,
+    backgroundColor: COLORS.background,
   },
   center: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: COLORS.background,
   },
   title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    marginBottom: 20,
+    ...(TYPOGRAPHY.h2 as TextStyle),
+    color: COLORS.onSurface,
+    marginBottom: SPACING.lg,
   },
   logoutBtn: {
-    marginBottom: 20,
-    padding: 12,
-    backgroundColor: "#2563EB",
-    borderRadius: 10,
+    marginBottom: SPACING.lg,
+    padding: SPACING.md,
+    backgroundColor: COLORS.primary,
+    borderRadius: RADIUS.md,
   },
   logoutText: {
-    color: "white",
+    ...(TYPOGRAPHY.bodyMd as TextStyle),
+    fontWeight: "600",
+    color: COLORS.onPrimary,
     textAlign: "center",
-    fontWeight: "bold",
   },
   card: {
-    padding: 16,
-    backgroundColor: "#f1f5f9",
-    borderRadius: 12,
-    marginBottom: 12,
+    padding: SPACING.md,
+    backgroundColor: COLORS.surface,
+    borderRadius: RADIUS.lg,
+    marginBottom: SPACING.md,
+    ...SHADOWS.card,
   },
   name: {
-    fontWeight: "bold",
-    fontSize: 18,
-    marginBottom: 8,
+    ...(TYPOGRAPHY.bodyLg as TextStyle),
+    fontWeight: "600",
+    color: COLORS.onSurface,
+    marginBottom: SPACING.sm,
+  },
+  meta: {
+    ...(TYPOGRAPHY.bodySm as TextStyle),
+    color: COLORS.onSurfaceVariant,
   },
   empty: {
+    ...(TYPOGRAPHY.bodyMd as TextStyle),
+    color: COLORS.onSurfaceVariant,
     textAlign: "center",
-    marginTop: 40,
-    fontSize: 16,
+    marginTop: SPACING.xl,
   },
 });

@@ -6,13 +6,17 @@ import {
   FlatList,
   TouchableOpacity,
   Alert,
+  TextStyle,
 } from "react-native";
-import {
-  useLocalSearchParams,
-  router,
-  useFocusEffect,
-} from "expo-router";
+import { useLocalSearchParams, router, useFocusEffect } from "expo-router";
 import { supabase } from "../../../utils/Supabase";
+import {
+  COLORS,
+  SPACING,
+  RADIUS,
+  SHADOWS,
+  TYPOGRAPHY,
+} from "@/constants/theme";
 
 type Exercise = {
   id: string;
@@ -23,31 +27,27 @@ type Exercise = {
 };
 
 export default function DayDetail() {
-  const { dayId, dayName, clientId } = useLocalSearchParams();
+  const { dayId, dayName } = useLocalSearchParams();
 
   const [exercises, setExercises] = useState<Exercise[]>([]);
 
   useFocusEffect(
     useCallback(() => {
       fetchExercises();
-    }, [])
+    }, []),
   );
 
   const fetchExercises = async () => {
-    console.log("Refetching exercises...");
-
     const { data, error } = await supabase
       .from("exercises")
       .select("*")
       .eq("routine_day_id", dayId);
 
     if (error) {
-      console.log("Fetch error:", error);
       return;
     }
 
     if (data) {
-      console.log("Exercises loaded:", data.length);
       setExercises(data);
     }
   };
@@ -78,7 +78,7 @@ export default function DayDetail() {
             fetchExercises();
           },
         },
-      ]
+      ],
     );
   };
 
@@ -86,7 +86,6 @@ export default function DayDetail() {
     <View style={styles.container}>
       <Text style={styles.title}>{dayName}</Text>
 
-      
       <TouchableOpacity
         style={styles.button}
         onPress={() =>
@@ -102,7 +101,9 @@ export default function DayDetail() {
       <FlatList
         data={exercises}
         keyExtractor={(item) => item.id}
-        ListEmptyComponent={<Text>No hay ejercicios todavía</Text>}
+        ListEmptyComponent={
+          <Text style={styles.muted}>No hay ejercicios todavía</Text>
+        }
         renderItem={({ item }) => (
           <View style={styles.card}>
             <Text style={styles.exerciseName}>{item.name}</Text>
@@ -145,76 +146,68 @@ export default function DayDetail() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    padding: SPACING.lg,
+    backgroundColor: COLORS.background,
   },
-
   title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    marginBottom: 20,
+    ...(TYPOGRAPHY.h2 as TextStyle),
+    color: COLORS.onSurface,
+    marginBottom: SPACING.lg,
   },
-
-  routineButton: {
-    backgroundColor: "#7C3AED",
-    padding: 14,
-    borderRadius: 12,
-    marginBottom: 12,
-  },
-
   button: {
-    backgroundColor: "#2563EB",
-    padding: 14,
-    borderRadius: 12,
-    marginBottom: 20,
+    backgroundColor: COLORS.primary,
+    padding: SPACING.md,
+    borderRadius: RADIUS.md,
+    marginBottom: SPACING.lg,
   },
-
   buttonText: {
-    color: "white",
+    ...(TYPOGRAPHY.button as TextStyle),
+    color: COLORS.onPrimary,
     textAlign: "center",
-    fontWeight: "bold",
   },
-
   card: {
-    backgroundColor: "#E5E7EB",
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 12,
+    backgroundColor: COLORS.surface,
+    padding: SPACING.md,
+    borderRadius: RADIUS.lg,
+    ...SHADOWS.card,
+    marginBottom: SPACING.md,
   },
-
   exerciseName: {
-    fontWeight: "bold",
-    fontSize: 20,
-    marginBottom: 8,
+    ...(TYPOGRAPHY.bodyLg as TextStyle),
+    fontWeight: "700",
+    color: COLORS.onSurface,
+    marginBottom: SPACING.sm,
   },
-
   exerciseInfo: {
-    fontSize: 16,
-    marginBottom: 4,
+    ...(TYPOGRAPHY.bodyMd as TextStyle),
+    color: COLORS.onSurfaceVariant,
+    marginBottom: SPACING.xs,
   },
-
   actions: {
     flexDirection: "row",
-    marginTop: 16,
-    gap: 10,
+    marginTop: SPACING.md,
+    gap: SPACING.sm,
   },
-
   editButton: {
     flex: 1,
-    backgroundColor: "#F59E0B",
-    padding: 12,
-    borderRadius: 10,
+    backgroundColor: COLORS.tertiary,
+    padding: SPACING.sm,
+    borderRadius: RADIUS.md,
   },
-
   deleteButton: {
     flex: 1,
-    backgroundColor: "#DC2626",
-    padding: 12,
-    borderRadius: 10,
+    backgroundColor: COLORS.error,
+    padding: SPACING.sm,
+    borderRadius: RADIUS.md,
   },
-
   actionText: {
-    color: "white",
+    ...(TYPOGRAPHY.bodySm as TextStyle),
+    fontWeight: "700",
+    color: COLORS.onPrimary,
     textAlign: "center",
-    fontWeight: "bold",
+  },
+  muted: {
+    ...(TYPOGRAPHY.bodyMd as TextStyle),
+    color: COLORS.onSurfaceVariant,
   },
 });

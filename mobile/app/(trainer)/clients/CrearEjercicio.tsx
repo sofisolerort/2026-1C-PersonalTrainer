@@ -6,9 +6,11 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  TextStyle,
 } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { supabase } from "../../../utils/Supabase";
+import { COLORS, SPACING, RADIUS, TYPOGRAPHY } from "@/constants/theme";
 
 export default function CrearEjercicio() {
   const { dayId } = useLocalSearchParams();
@@ -42,6 +44,7 @@ export default function CrearEjercicio() {
 
       <TextInput
         placeholder="Ejercicio"
+        placeholderTextColor={COLORS.onSurfaceVariant}
         value={name}
         onChangeText={setName}
         style={styles.input}
@@ -49,6 +52,7 @@ export default function CrearEjercicio() {
 
       <TextInput
         placeholder="Sets"
+        placeholderTextColor={COLORS.onSurfaceVariant}
         value={sets}
         onChangeText={setSets}
         keyboardType="numeric"
@@ -57,6 +61,7 @@ export default function CrearEjercicio() {
 
       <TextInput
         placeholder="Reps"
+        placeholderTextColor={COLORS.onSurfaceVariant}
         value={reps}
         onChangeText={setReps}
         keyboardType="numeric"
@@ -65,6 +70,7 @@ export default function CrearEjercicio() {
 
       <TextInput
         placeholder="Peso sugerido"
+        placeholderTextColor={COLORS.onSurfaceVariant}
         value={weight}
         onChangeText={setWeight}
         keyboardType="numeric"
@@ -79,27 +85,34 @@ export default function CrearEjercicio() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20 },
+  container: {
+    flex: 1,
+    padding: SPACING.lg,
+    backgroundColor: COLORS.background,
+  },
   title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    marginBottom: 20,
+    ...(TYPOGRAPHY.h2 as TextStyle),
+    color: COLORS.onSurface,
+    marginBottom: SPACING.lg,
   },
   input: {
+    ...(TYPOGRAPHY.bodyMd as TextStyle),
     borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 16,
+    borderColor: COLORS.outlineVariant,
+    borderRadius: RADIUS.md,
+    padding: SPACING.md,
+    marginBottom: SPACING.md,
+    backgroundColor: COLORS.surface,
+    color: COLORS.onSurface,
   },
   button: {
-    backgroundColor: "#2563EB",
-    padding: 16,
-    borderRadius: 12,
+    backgroundColor: COLORS.primary,
+    padding: SPACING.md,
+    borderRadius: RADIUS.md,
   },
   buttonText: {
-    color: "white",
+    ...(TYPOGRAPHY.button as TextStyle),
+    color: COLORS.onPrimary,
     textAlign: "center",
-    fontWeight: "bold",
   },
 });

@@ -5,12 +5,19 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
+  TextStyle,
 } from "react-native";
 import { router } from "expo-router";
 import { useAuth } from "../../context/AuthContext";
-
 import { useEffect, useState } from "react";
 import { supabase } from "../../utils/Supabase";
+import {
+  COLORS,
+  SPACING,
+  RADIUS,
+  SHADOWS,
+  TYPOGRAPHY,
+} from "@/constants/theme";
 
 export default function ClienteHome() {
   const { user, signOut } = useAuth();
@@ -22,11 +29,11 @@ export default function ClienteHome() {
       if (!user?.id) return;
       const { data, error } = await supabase
         .from("profiles")
-        .select("nombre_completo")
+        .select("full_name")
         .eq("id", user.id)
         .single();
       if (!error && data) {
-        setNombreCompleto(data.nombre_completo);
+        setNombreCompleto(data.full_name);
       } else {
         // Fallback: usar la parte local del email
         setNombreCompleto(user.email?.split("@")[0] || "Usuario");
@@ -91,47 +98,64 @@ export default function ClienteHome() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f0f4f8" },
+  container: { flex: 1, backgroundColor: COLORS.background },
   header: {
-    backgroundColor: "#3b82f6",
-    paddingVertical: 40,
-    paddingHorizontal: 20,
+    backgroundColor: COLORS.primary,
+    paddingVertical: SPACING.xl,
+    paddingHorizontal: SPACING.lg,
     alignItems: "center",
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
+    borderBottomLeftRadius: RADIUS.xl,
+    borderBottomRightRadius: RADIUS.xl,
   },
-  bienvenida: { fontSize: 24, fontWeight: "bold", color: "white" },
-  subtext: { fontSize: 14, color: "#dbeafe", marginTop: 5 },
+  bienvenida: {
+    ...(TYPOGRAPHY.h3 as TextStyle),
+    color: COLORS.onPrimary,
+  },
+  subtext: {
+    ...(TYPOGRAPHY.bodySm as TextStyle),
+    color: COLORS.onPrimary,
+    opacity: 0.85,
+    marginTop: SPACING.xs,
+  },
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
-    padding: 16,
-    gap: 16,
+    padding: SPACING.md,
+    gap: SPACING.md,
   },
   card: {
     width: "47%",
-    backgroundColor: "white",
-    borderRadius: 16,
-    padding: 16,
+    backgroundColor: COLORS.surface,
+    borderRadius: RADIUS.lg,
+    padding: SPACING.md,
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    marginBottom: 8,
+    ...SHADOWS.card,
+    marginBottom: SPACING.sm,
   },
-  cardEmoji: { fontSize: 32, marginBottom: 8 },
-  cardTitle: { fontSize: 16, fontWeight: "bold", marginBottom: 4 },
-  cardDesc: { fontSize: 12, color: "#666", textAlign: "center" },
+  cardEmoji: { fontSize: 32, marginBottom: SPACING.sm },
+  cardTitle: {
+    ...(TYPOGRAPHY.bodyMd as TextStyle),
+    fontWeight: "600",
+    color: COLORS.onSurface,
+    marginBottom: SPACING.xs,
+  },
+  cardDesc: {
+    ...(TYPOGRAPHY.bodySm as TextStyle),
+    color: COLORS.onSurfaceVariant,
+    textAlign: "center",
+  },
   logoutButton: {
-    backgroundColor: "#ef4444",
-    margin: 16,
-    padding: 14,
-    borderRadius: 12,
+    backgroundColor: COLORS.error,
+    margin: SPACING.md,
+    padding: SPACING.md,
+    borderRadius: RADIUS.md,
     alignItems: "center",
-    marginBottom: 40,
+    marginBottom: SPACING.xl,
   },
-  logoutText: { color: "white", fontWeight: "bold", fontSize: 16 },
+  logoutText: {
+    ...(TYPOGRAPHY.bodyMd as TextStyle),
+    fontWeight: "600",
+    color: COLORS.onError,
+  },
 });
