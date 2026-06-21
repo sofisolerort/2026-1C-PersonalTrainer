@@ -42,7 +42,7 @@ export default function VerRutina() {
   useFocusEffect(
     useCallback(() => {
       fetchRoutine();
-    }, [clientId])
+    }, [clientId]),
   );
 
   const fetchRoutine = async () => {
@@ -103,14 +103,14 @@ export default function VerRutina() {
             router.back();
           },
         },
-      ]
+      ],
     );
   };
 
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" color={COLORS.primary} />
       </View>
     );
   }
@@ -141,7 +141,7 @@ export default function VerRutina() {
           </TouchableOpacity>
 
           <TouchableOpacity onPress={deleteRoutine}>
-            <MaterialIcons name="delete" size={24} color="#DC2626" />
+            <MaterialIcons name="delete" size={24} color={COLORS.error} />
           </TouchableOpacity>
         </View>
       </View>

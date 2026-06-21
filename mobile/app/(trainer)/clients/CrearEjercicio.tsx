@@ -9,27 +9,19 @@ import {
   FlatList,
   Pressable,
   ActivityIndicator,
+  TextStyle,
 } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 
-import { COLORS, SPACING, RADIUS } from "@/constants/theme";
+import { COLORS, SPACING, RADIUS, TYPOGRAPHY } from "@/constants/theme";
 import { supabase } from "@/utils/Supabase";
+import { fetchExercisesByName, ApiExercise } from "@/utils/ExerciseApi";
 
-type ApiExercise = {
-  id: string;
-  name: string;
-  bodyPart: string;
-  target: string;
-  equipment: string;
-};
-
-const BASE_URL = "https://exercisedb.p.rapidapi.com";
-
-// 🧠 1. Diccionario expandido y normalizado (Soporta sinónimos y variaciones)
+// 🧠 Diccionario expandido y normalizado (Soporta sinónimos y variaciones)
 const translateInputSmart = (input: string): string => {
   // Limpiamos acentos para mapear fácilmente
   const clean = input.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  
+
   const map: Record<string, string> = {
     // Grupos principales
     pecho: "chest",
@@ -41,7 +33,7 @@ const translateInputSmart = (input: string): string => {
     hombro: "shoulder",
     hombros: "shoulder",
     deltoides: "shoulder",
-    
+
     // Brazos
     biceps: "biceps",
     triceps: "triceps",
@@ -49,7 +41,7 @@ const translateInputSmart = (input: string): string => {
     antebrazos: "forearm",
     brazo: "arm",
     brazos: "arm",
-    
+
     // Piernas / Glúteos
     pierna: "leg",
     piernas: "leg",
@@ -77,19 +69,6 @@ const translateInputSmart = (input: string): string => {
   return map[clean] || clean;
 };
 
-// PETICIÓN GENERAL AL ENDPOINT DE NOMBRE
-async function fetchExercisesByName(searchWord: string) {
-  const apiKey = process.env.EXPO_PUBLIC_RAPIDAPI_KEY!;
-  const url = `${BASE_URL}/exercises/name/${encodeURIComponent(searchWord)}?rapidapi-key=${apiKey}&limit=10`;
-
-  const res = await fetch(url);
-  if (!res.ok) {
-    const txt = await res.text();
-    throw new Error(txt);
-  }
-  return res.json();
-}
-
 export default function CrearEjercicio() {
   const { dayId } = useLocalSearchParams();
 
@@ -115,11 +94,10 @@ export default function CrearEjercicio() {
 
       // Traducción inteligente
       const searchParam = translateInputSmart(cleanQuery);
-      
+
       const data: ApiExercise[] = await fetchExercisesByName(searchParam);
-      
-      
-      //Re-ordenamiento artificial en Frontend (Scoring local)
+
+      // Re-ordenamiento artificial en Frontend (Scoring local)
       // Como la API solo devuelve 10, nos aseguramos de ordenar arriba los más relevantes
       const smartOrderedData = data.sort((a, b) => {
         const targetA = a.target?.toLowerCase() || "";
@@ -133,8 +111,10 @@ export default function CrearEjercicio() {
         let scoreB = 0;
 
         // Si el músculo objetivo o la zona del cuerpo contiene la palabra clave, suma prioridad máxima
-        if (targetA.includes(searchParam) || bodyA.includes(searchParam)) scoreA += 10;
-        if (targetB.includes(searchParam) || bodyB.includes(searchParam)) scoreB += 10;
+        if (targetA.includes(searchParam) || bodyA.includes(searchParam))
+          scoreA += 10;
+        if (targetB.includes(searchParam) || bodyB.includes(searchParam))
+          scoreB += 10;
 
         // Si el nombre del ejercicio empieza exactamente con el término buscado
         if (nameA.startsWith(searchParam)) scoreA += 5;
@@ -142,11 +122,14 @@ export default function CrearEjercicio() {
 
         return scoreB - scoreA;
       });
-      
+
       setResults(smartOrderedData);
 
       if (smartOrderedData.length === 0) {
-        Alert.alert("Aviso", "No se encontraron ejercicios. Prueba buscando directamente en inglés (ej: bench, squat, curl).");
+        Alert.alert(
+          "Aviso",
+          "No se encontraron ejercicios. Prueba buscando directamente en inglés (ej: bench, squat, curl).",
+        );
       }
     } catch (error) {
       console.log("API ERROR:", error);
@@ -197,18 +180,24 @@ export default function CrearEjercicio() {
         value={query}
         onChangeText={setQuery}
         style={styles.input}
-        placeholderTextColor="#999"
+        placeholderTextColor={COLORS.onSurfaceVariant}
       />
 
-      <TouchableOpacity style={styles.button} onPress={searchExercises} disabled={loading}>
-        <Text style={styles.buttonText}>{loading ? "Buscando..." : "Buscar"}</Text>
+      <TouchableOpacity
+        style={styles.button}
+        onPress={searchExercises}
+        disabled={loading}
+      >
+        <Text style={styles.buttonText}>
+          {loading ? "Buscando..." : "Buscar"}
+        </Text>
       </TouchableOpacity>
 
       {loading && (
         <ActivityIndicator
           size="small"
           color={COLORS.primary}
-          style={{ marginVertical: 12 }}
+          style={{ marginVertical: SPACING.sm }}
         />
       )}
 
@@ -237,6 +226,7 @@ export default function CrearEjercicio() {
       {/* FORMULARIO DE CARGA */}
       <TextInput
         placeholder="Nombre del ejercicio"
+        placeholderTextColor={COLORS.onSurfaceVariant}
         value={name}
         onChangeText={setName}
         style={styles.input}
@@ -244,6 +234,7 @@ export default function CrearEjercicio() {
 
       <TextInput
         placeholder="Sets"
+        placeholderTextColor={COLORS.onSurfaceVariant}
         value={sets}
         onChangeText={setSets}
         keyboardType="numeric"
@@ -252,6 +243,7 @@ export default function CrearEjercicio() {
 
       <TextInput
         placeholder="Reps"
+        placeholderTextColor={COLORS.onSurfaceVariant}
         value={reps}
         onChangeText={setReps}
         keyboardType="numeric"
@@ -260,6 +252,7 @@ export default function CrearEjercicio() {
 
       <TextInput
         placeholder="Peso sugerido"
+        placeholderTextColor={COLORS.onSurfaceVariant}
         value={weight}
         onChangeText={setWeight}
         keyboardType="numeric"
@@ -280,12 +273,12 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
   },
   title: {
-    fontSize: 28,
-    fontWeight: "700",
-    marginBottom: 20,
+    ...(TYPOGRAPHY.h2 as TextStyle),
     color: COLORS.onSurface,
+    marginBottom: SPACING.lg,
   },
   input: {
+    ...(TYPOGRAPHY.bodyMd as TextStyle),
     borderWidth: 1,
     borderColor: COLORS.outlineVariant,
     borderRadius: RADIUS.md,
@@ -298,40 +291,41 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     padding: SPACING.md,
     borderRadius: RADIUS.md,
-    marginBottom: 12,
+    marginBottom: SPACING.sm,
   },
   saveButton: {
-    backgroundColor: "#2e7d32",
+    backgroundColor: COLORS.secondary,
     padding: SPACING.md,
     borderRadius: RADIUS.md,
   },
   buttonText: {
-    color: "white",
+    ...(TYPOGRAPHY.button as TextStyle),
+    color: COLORS.onPrimary,
     textAlign: "center",
-    fontWeight: "700",
   },
   resultsContainer: {
     maxHeight: 220,
-    marginBottom: 12,
+    marginBottom: SPACING.sm,
     borderWidth: 1,
     borderColor: COLORS.outlineVariant,
     borderRadius: RADIUS.md,
     backgroundColor: COLORS.surface,
   },
   card: {
-    padding: 12,
+    padding: SPACING.sm,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.outlineVariant,
   },
   name: {
+    ...(TYPOGRAPHY.bodyMd as TextStyle),
     fontWeight: "700",
     color: COLORS.onSurface,
     textTransform: "capitalize",
   },
   sub: {
-    color: "#666",
-    fontSize: 12,
-    marginTop: 4,
+    ...(TYPOGRAPHY.bodySm as TextStyle),
+    color: COLORS.onSurfaceVariant,
+    marginTop: SPACING.xs,
     textTransform: "capitalize",
   },
 });

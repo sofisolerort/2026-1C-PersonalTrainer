@@ -1,16 +1,26 @@
 const BASE_URL = "https://exercisedb.p.rapidapi.com";
 
-async function fetchExercisesByMuscle(muscle: string) {
+export type ApiExercise = {
+  id: string;
+  name: string;
+  bodyPart: string;
+  target: string;
+  equipment: string;
+};
+
+// Busca ejercicios por nombre en ExerciseDB (RapidAPI).
+export async function fetchExercisesByName(
+  searchWord: string,
+): Promise<ApiExercise[]> {
   const apiKey = process.env.EXPO_PUBLIC_RAPIDAPI_KEY!;
-  
-  const url = `${BASE_URL}/exercises?bodyPart=${muscle}&rapidapi-key=${apiKey}&limit=10`;
+  const url = `${BASE_URL}/exercises/name/${encodeURIComponent(
+    searchWord,
+  )}?rapidapi-key=${apiKey}&limit=10`;
 
   const res = await fetch(url);
-  const text = await res.text();
-
   if (!res.ok) {
-    throw new Error(text);
+    const txt = await res.text();
+    throw new Error(txt);
   }
-
-  return JSON.parse(text);
+  return res.json();
 }
