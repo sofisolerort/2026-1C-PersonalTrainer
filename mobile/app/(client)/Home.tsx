@@ -50,7 +50,7 @@ export default function ClienteHome() {
 
   const irAPerfil = () => router.push("/(client)/Perfil");
   const irARutinas = () => router.push("/(client)/Rutinas");
-  const irAConfig = () => router.push("/(client)/Configuracion");
+ 
 
   return (
     <ScrollView style={styles.container}>
@@ -74,20 +74,9 @@ export default function ClienteHome() {
           <Text style={styles.cardDesc}>Tus entrenamientos asignados</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.card}
-          onPress={() => Alert.alert("Próximamente", "Próximamente")}
-        >
-          <Text style={styles.cardEmoji}>📊</Text>
-          <Text style={styles.cardTitle}>Progreso</Text>
-          <Text style={styles.cardDesc}>Evolución y estadísticas</Text>
-        </TouchableOpacity>
+        
 
-        <TouchableOpacity style={styles.card} onPress={irAConfig}>
-          <Text style={styles.cardEmoji}>⚙️</Text>
-          <Text style={styles.cardTitle}>Configuración</Text>
-          <Text style={styles.cardDesc}>Preferencias de la app</Text>
-        </TouchableOpacity>
+       
       </View>
 
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>

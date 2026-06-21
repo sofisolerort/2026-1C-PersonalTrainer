@@ -7,6 +7,7 @@ import {
   FlatList,
   TouchableOpacity,
   TextStyle,
+  Alert,
 } from "react-native";
 import { useLocalSearchParams, router, useFocusEffect } from "expo-router";
 import { supabase } from "../../../utils/Supabase";
@@ -41,7 +42,7 @@ export default function VerRutina() {
   useFocusEffect(
     useCallback(() => {
       fetchRoutine();
-    }, [clientId]),
+    }, [clientId])
   );
 
   const fetchRoutine = async () => {
@@ -73,10 +74,43 @@ export default function VerRutina() {
     setLoading(false);
   };
 
+  const deleteRoutine = async () => {
+    if (!routine) return;
+
+    Alert.alert(
+      "Eliminar rutina",
+      "Se eliminarán la rutina, sus días y todos los ejercicios.",
+      [
+        {
+          text: "Cancelar",
+          style: "cancel",
+        },
+        {
+          text: "Eliminar",
+          style: "destructive",
+          onPress: async () => {
+            const { error } = await supabase
+              .from("routines")
+              .delete()
+              .eq("id", routine.id);
+
+            if (error) {
+              Alert.alert("Error", error.message);
+              return;
+            }
+
+            Alert.alert("Éxito", "Rutina eliminada");
+            router.back();
+          },
+        },
+      ]
+    );
+  };
+
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
+        <ActivityIndicator size="large" />
       </View>
     );
   }
@@ -84,7 +118,7 @@ export default function VerRutina() {
   if (!routine) {
     return (
       <View style={styles.center}>
-        <Text style={styles.muted}>Este cliente todavía no tiene rutina</Text>
+        <Text>Este cliente todavía no tiene rutina</Text>
       </View>
     );
   }
@@ -94,16 +128,22 @@ export default function VerRutina() {
       <View style={styles.header}>
         <Text style={styles.title}>{routine.title}</Text>
 
-        <TouchableOpacity
-          onPress={() =>
-            router.push({
-              pathname: "/(trainer)/clients/EditarInfoGeneral",
-              params: { clientId },
-            } as any)
-          }
-        >
-          <MaterialIcons name="edit" size={24} color={COLORS.onSurface} />
-        </TouchableOpacity>
+        <View style={styles.headerButtons}>
+          <TouchableOpacity
+            onPress={() =>
+              router.push({
+                pathname: "/(trainer)/clients/EditarInfoGeneral",
+                params: { clientId },
+              } as any)
+            }
+          >
+            <MaterialIcons name="edit" size={24} color={COLORS.onSurface} />
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={deleteRoutine}>
+            <MaterialIcons name="delete" size={24} color="#DC2626" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <Text style={styles.description}>
@@ -148,33 +188,45 @@ const styles = StyleSheet.create({
     padding: SPACING.lg,
     backgroundColor: COLORS.background,
   },
+
   center: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: COLORS.background,
   },
+
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: SPACING.md,
   },
+
+  headerButtons: {
+    flexDirection: "row",
+    gap: SPACING.md,
+    alignItems: "center",
+  },
+
   title: {
     ...(TYPOGRAPHY.h2 as TextStyle),
     color: COLORS.onSurface,
   },
+
   description: {
     ...(TYPOGRAPHY.bodyMd as TextStyle),
     color: COLORS.onSurfaceVariant,
     marginBottom: SPACING.lg,
   },
+
   subtitle: {
     ...(TYPOGRAPHY.bodyLg as TextStyle),
     fontWeight: "700",
     color: COLORS.onSurface,
     marginBottom: SPACING.md,
   },
+
   dayCard: {
     padding: SPACING.md,
     borderRadius: RADIUS.lg,
@@ -182,11 +234,13 @@ const styles = StyleSheet.create({
     ...SHADOWS.card,
     marginBottom: SPACING.md,
   },
+
   dayText: {
     ...(TYPOGRAPHY.bodyMd as TextStyle),
     fontWeight: "600",
     color: COLORS.onSurface,
   },
+
   muted: {
     ...(TYPOGRAPHY.bodyMd as TextStyle),
     color: COLORS.onSurfaceVariant,

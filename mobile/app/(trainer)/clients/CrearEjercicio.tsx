@@ -6,11 +6,89 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
-  TextStyle,
+  FlatList,
+  Pressable,
+  ActivityIndicator,
 } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
-import { supabase } from "../../../utils/Supabase";
-import { COLORS, SPACING, RADIUS, TYPOGRAPHY } from "@/constants/theme";
+
+import { COLORS, SPACING, RADIUS } from "@/constants/theme";
+import { supabase } from "@/utils/Supabase";
+
+type ApiExercise = {
+  id: string;
+  name: string;
+  bodyPart: string;
+  target: string;
+  equipment: string;
+};
+
+const BASE_URL = "https://exercisedb.p.rapidapi.com";
+
+// 🧠 1. Diccionario expandido y normalizado (Soporta sinónimos y variaciones)
+const translateInputSmart = (input: string): string => {
+  // Limpiamos acentos para mapear fácilmente
+  const clean = input.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  
+  const map: Record<string, string> = {
+    // Grupos principales
+    pecho: "chest",
+    pectoral: "chest",
+    pectorales: "chest",
+    espalda: "back",
+    dorsal: "back",
+    dorsales: "back",
+    hombro: "shoulder",
+    hombros: "shoulder",
+    deltoides: "shoulder",
+    
+    // Brazos
+    biceps: "biceps",
+    triceps: "triceps",
+    antebrazo: "forearm",
+    antebrazos: "forearm",
+    brazo: "arm",
+    brazos: "arm",
+    
+    // Piernas / Glúteos
+    pierna: "leg",
+    piernas: "leg",
+    cuadriceps: "quad",
+    femorales: "hamstring",
+    femoral: "hamstring",
+    gluteo: "glute",
+    gluteos: "glute",
+    pantorrilla: "calf",
+    pantorrillas: "calves",
+    gemelos: "calves",
+
+    // Core / Equipamiento
+    abdomen: "abs",
+    abdominales: "abs",
+    abs: "abs",
+    mancuerna: "dumbbell",
+    mancuernas: "dumbbell",
+    barra: "barbell",
+    polea: "cable",
+    sentadilla: "squat",
+    estocadas: "lunge",
+  };
+
+  return map[clean] || clean;
+};
+
+// PETICIÓN GENERAL AL ENDPOINT DE NOMBRE
+async function fetchExercisesByName(searchWord: string) {
+  const apiKey = process.env.EXPO_PUBLIC_RAPIDAPI_KEY!;
+  const url = `${BASE_URL}/exercises/name/${encodeURIComponent(searchWord)}?rapidapi-key=${apiKey}&limit=10`;
+
+  const res = await fetch(url);
+  if (!res.ok) {
+    const txt = await res.text();
+    throw new Error(txt);
+  }
+  return res.json();
+}
 
 export default function CrearEjercicio() {
   const { dayId } = useLocalSearchParams();
@@ -20,13 +98,84 @@ export default function CrearEjercicio() {
   const [reps, setReps] = useState("");
   const [weight, setWeight] = useState("");
 
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<ApiExercise[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  // 🔎 SEARCH POTENCIADO ARTIFICIALMENTE
+  const searchExercises = async () => {
+    try {
+      const cleanQuery = query.trim().toLowerCase();
+      if (!cleanQuery) {
+        Alert.alert("Error", "Ingresá qué ejercicio o músculo buscas");
+        return;
+      }
+
+      setLoading(true);
+
+      // Traducción inteligente
+      const searchParam = translateInputSmart(cleanQuery);
+      
+      const data: ApiExercise[] = await fetchExercisesByName(searchParam);
+      
+      
+      //Re-ordenamiento artificial en Frontend (Scoring local)
+      // Como la API solo devuelve 10, nos aseguramos de ordenar arriba los más relevantes
+      const smartOrderedData = data.sort((a, b) => {
+        const targetA = a.target?.toLowerCase() || "";
+        const targetB = b.target?.toLowerCase() || "";
+        const bodyA = a.bodyPart?.toLowerCase() || "";
+        const bodyB = b.bodyPart?.toLowerCase() || "";
+        const nameA = a.name?.toLowerCase() || "";
+        const nameB = b.name?.toLowerCase() || "";
+
+        let scoreA = 0;
+        let scoreB = 0;
+
+        // Si el músculo objetivo o la zona del cuerpo contiene la palabra clave, suma prioridad máxima
+        if (targetA.includes(searchParam) || bodyA.includes(searchParam)) scoreA += 10;
+        if (targetB.includes(searchParam) || bodyB.includes(searchParam)) scoreB += 10;
+
+        // Si el nombre del ejercicio empieza exactamente con el término buscado
+        if (nameA.startsWith(searchParam)) scoreA += 5;
+        if (nameB.startsWith(searchParam)) scoreB += 5;
+
+        return scoreB - scoreA;
+      });
+      
+      setResults(smartOrderedData);
+
+      if (smartOrderedData.length === 0) {
+        Alert.alert("Aviso", "No se encontraron ejercicios. Prueba buscando directamente en inglés (ej: bench, squat, curl).");
+      }
+    } catch (error) {
+      console.log("API ERROR:", error);
+      Alert.alert("Error", "No se pudieron obtener datos de la API");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  //  SELECT EXERCISE
+  const selectExercise = (exercise: ApiExercise) => {
+    setName(exercise.name);
+    setResults([]);
+    setQuery("");
+  };
+
+  //  SAVE SUPABASE
   const createExercise = async () => {
+    if (!name || !sets || !reps) {
+      Alert.alert("Error", "Completa nombre, sets y reps");
+      return;
+    }
+
     const { error } = await supabase.from("exercises").insert({
       routine_day_id: dayId,
       name,
       sets: Number(sets),
       reps: Number(reps),
-      suggested_weight: Number(weight),
+      suggested_weight: Number(weight || 0),
     });
 
     if (error) {
@@ -42,9 +191,52 @@ export default function CrearEjercicio() {
     <View style={styles.container}>
       <Text style={styles.title}>Crear Ejercicio</Text>
 
+      {/* INPUT DE BÚSQUEDA */}
       <TextInput
-        placeholder="Ejercicio"
-        placeholderTextColor={COLORS.onSurfaceVariant}
+        placeholder="Ej: pecho, cuadriceps, bench press, polea..."
+        value={query}
+        onChangeText={setQuery}
+        style={styles.input}
+        placeholderTextColor="#999"
+      />
+
+      <TouchableOpacity style={styles.button} onPress={searchExercises} disabled={loading}>
+        <Text style={styles.buttonText}>{loading ? "Buscando..." : "Buscar"}</Text>
+      </TouchableOpacity>
+
+      {loading && (
+        <ActivityIndicator
+          size="small"
+          color={COLORS.primary}
+          style={{ marginVertical: 12 }}
+        />
+      )}
+
+      {/* LISTA DE SUGERENCIAS */}
+      {results.length > 0 && (
+        <View style={styles.resultsContainer}>
+          <FlatList
+            data={results}
+            keyExtractor={(item) => item.id}
+            keyboardShouldPersistTaps="handled"
+            renderItem={({ item }) => (
+              <Pressable
+                style={styles.card}
+                onPress={() => selectExercise(item)}
+              >
+                <Text style={styles.name}>{item.name}</Text>
+                <Text style={styles.sub}>
+                  {item.bodyPart} • {item.target} • {item.equipment}
+                </Text>
+              </Pressable>
+            )}
+          />
+        </View>
+      )}
+
+      {/* FORMULARIO DE CARGA */}
+      <TextInput
+        placeholder="Nombre del ejercicio"
         value={name}
         onChangeText={setName}
         style={styles.input}
@@ -52,7 +244,6 @@ export default function CrearEjercicio() {
 
       <TextInput
         placeholder="Sets"
-        placeholderTextColor={COLORS.onSurfaceVariant}
         value={sets}
         onChangeText={setSets}
         keyboardType="numeric"
@@ -61,7 +252,6 @@ export default function CrearEjercicio() {
 
       <TextInput
         placeholder="Reps"
-        placeholderTextColor={COLORS.onSurfaceVariant}
         value={reps}
         onChangeText={setReps}
         keyboardType="numeric"
@@ -70,15 +260,14 @@ export default function CrearEjercicio() {
 
       <TextInput
         placeholder="Peso sugerido"
-        placeholderTextColor={COLORS.onSurfaceVariant}
         value={weight}
         onChangeText={setWeight}
         keyboardType="numeric"
         style={styles.input}
       />
 
-      <TouchableOpacity style={styles.button} onPress={createExercise}>
-        <Text style={styles.buttonText}>Guardar</Text>
+      <TouchableOpacity style={styles.saveButton} onPress={createExercise}>
+        <Text style={styles.buttonText}>Guardar ejercicio</Text>
       </TouchableOpacity>
     </View>
   );
@@ -91,12 +280,12 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
   },
   title: {
-    ...(TYPOGRAPHY.h2 as TextStyle),
+    fontSize: 28,
+    fontWeight: "700",
+    marginBottom: 20,
     color: COLORS.onSurface,
-    marginBottom: SPACING.lg,
   },
   input: {
-    ...(TYPOGRAPHY.bodyMd as TextStyle),
     borderWidth: 1,
     borderColor: COLORS.outlineVariant,
     borderRadius: RADIUS.md,
@@ -109,10 +298,40 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     padding: SPACING.md,
     borderRadius: RADIUS.md,
+    marginBottom: 12,
+  },
+  saveButton: {
+    backgroundColor: "#2e7d32",
+    padding: SPACING.md,
+    borderRadius: RADIUS.md,
   },
   buttonText: {
-    ...(TYPOGRAPHY.button as TextStyle),
-    color: COLORS.onPrimary,
+    color: "white",
     textAlign: "center",
+    fontWeight: "700",
+  },
+  resultsContainer: {
+    maxHeight: 220,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: COLORS.outlineVariant,
+    borderRadius: RADIUS.md,
+    backgroundColor: COLORS.surface,
+  },
+  card: {
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.outlineVariant,
+  },
+  name: {
+    fontWeight: "700",
+    color: COLORS.onSurface,
+    textTransform: "capitalize",
+  },
+  sub: {
+    color: "#666",
+    fontSize: 12,
+    marginTop: 4,
+    textTransform: "capitalize",
   },
 });
