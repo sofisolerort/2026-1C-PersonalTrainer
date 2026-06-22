@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
-  FlatList,
   Pressable,
   ActivityIndicator,
   TextStyle,
@@ -16,6 +15,7 @@ import { useLocalSearchParams, router } from "expo-router";
 import { COLORS, SPACING, RADIUS, TYPOGRAPHY } from "@/constants/theme";
 import { supabase } from "@/utils/Supabase";
 import { fetchExercisesByName, ApiExercise } from "@/utils/ExerciseApi";
+import { KeyboardScreen } from "@/components/KeyboardScreen";
 
 // 🧠 Diccionario expandido y normalizado (Soporta sinónimos y variaciones)
 const translateInputSmart = (input: string): string => {
@@ -171,7 +171,7 @@ export default function CrearEjercicio() {
   };
 
   return (
-    <View style={styles.container}>
+    <KeyboardScreen>
       <Text style={styles.title}>Crear Ejercicio</Text>
 
       {/* INPUT DE BÚSQUEDA */}
@@ -204,22 +204,18 @@ export default function CrearEjercicio() {
       {/* LISTA DE SUGERENCIAS */}
       {results.length > 0 && (
         <View style={styles.resultsContainer}>
-          <FlatList
-            data={results}
-            keyExtractor={(item) => item.id}
-            keyboardShouldPersistTaps="handled"
-            renderItem={({ item }) => (
-              <Pressable
-                style={styles.card}
-                onPress={() => selectExercise(item)}
-              >
-                <Text style={styles.name}>{item.name}</Text>
-                <Text style={styles.sub}>
-                  {item.bodyPart} • {item.target} • {item.equipment}
-                </Text>
-              </Pressable>
-            )}
-          />
+          {results.map((item) => (
+            <Pressable
+              key={item.id}
+              style={styles.card}
+              onPress={() => selectExercise(item)}
+            >
+              <Text style={styles.name}>{item.name}</Text>
+              <Text style={styles.sub}>
+                {item.bodyPart} • {item.target} • {item.equipment}
+              </Text>
+            </Pressable>
+          ))}
         </View>
       )}
 
@@ -262,16 +258,11 @@ export default function CrearEjercicio() {
       <TouchableOpacity style={styles.saveButton} onPress={createExercise}>
         <Text style={styles.buttonText}>Guardar ejercicio</Text>
       </TouchableOpacity>
-    </View>
+    </KeyboardScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: SPACING.lg,
-    backgroundColor: COLORS.background,
-  },
   title: {
     ...(TYPOGRAPHY.h2 as TextStyle),
     color: COLORS.onSurface,
@@ -304,7 +295,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   resultsContainer: {
-    maxHeight: 220,
     marginBottom: SPACING.sm,
     borderWidth: 1,
     borderColor: COLORS.outlineVariant,

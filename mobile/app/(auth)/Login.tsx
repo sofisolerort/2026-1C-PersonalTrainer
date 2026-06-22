@@ -8,6 +8,8 @@ import {
   Alert,
   ActivityIndicator,
   TextStyle,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { router } from "expo-router";
 import { useAuth } from "../../context/AuthContext";
@@ -64,7 +66,10 @@ export default function Login() {
   };
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
       <Text style={styles.title}>Iniciar Sesión</Text>
       <TextInput
         placeholder="Email"
@@ -101,7 +106,7 @@ export default function Login() {
       >
         <Text style={styles.link}>¿No tienes cuenta? Regístrate</Text>
       </TouchableOpacity>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 

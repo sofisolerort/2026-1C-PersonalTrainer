@@ -1,6 +1,5 @@
 import { useState } from "react";
 import {
-  View,
   Text,
   TextInput,
   TouchableOpacity,
@@ -11,6 +10,7 @@ import {
 import { useLocalSearchParams, router } from "expo-router";
 import { supabase } from "../../../utils/Supabase";
 import { COLORS, SPACING, RADIUS, TYPOGRAPHY } from "@/constants/theme";
+import { KeyboardScreen } from "@/components/KeyboardScreen";
 
 export default function CrearRutina() {
   const { clientId } = useLocalSearchParams();
@@ -85,7 +85,7 @@ export default function CrearRutina() {
   };
 
   return (
-    <View style={styles.container}>
+    <KeyboardScreen>
       <Text style={styles.title}>Crear Rutina</Text>
 
       <TextInput
@@ -107,16 +107,11 @@ export default function CrearRutina() {
       <TouchableOpacity style={styles.button} onPress={createRoutine}>
         <Text style={styles.buttonText}>Guardar Rutina</Text>
       </TouchableOpacity>
-    </View>
+    </KeyboardScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: SPACING.lg,
-    backgroundColor: COLORS.background,
-  },
   title: {
     ...(TYPOGRAPHY.h2 as TextStyle),
     color: COLORS.onSurface,

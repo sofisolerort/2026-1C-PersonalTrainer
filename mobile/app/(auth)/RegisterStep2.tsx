@@ -4,7 +4,6 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  ScrollView,
   Alert,
   TextStyle,
 } from "react-native";
@@ -14,6 +13,8 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { useState } from "react";
 import { useRegister2 } from "../../hooks/auth/useRegister2";
 import { COLORS, SPACING, RADIUS, TYPOGRAPHY } from "@/constants/theme";
+import { KeyboardScreen } from "@/components/KeyboardScreen";
+import BackButton from "@/components/BackButton";
 
 export default function RegisterStep2() {
   const { email, password } = useLocalSearchParams<{
@@ -53,7 +54,7 @@ export default function RegisterStep2() {
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <KeyboardScreen>
       <Text style={styles.title}>Registro - Paso 2</Text>
 
       <Text style={styles.label}>Nombre completo</Text>
@@ -90,57 +91,65 @@ export default function RegisterStep2() {
       )}
 
       <Text style={styles.label}>Días que entrenas por semana (1-6)</Text>
-      <Picker
-        selectedValue={form.training_days}
-        onValueChange={(v) => updateField("training_days", v)}
-        style={styles.picker}
-      >
-        {[1, 2, 3, 4, 5, 6].map((d) => (
-          <Picker.Item key={d} label={d.toString()} value={d} />
-        ))}
-      </Picker>
+      <View style={styles.pickerWrapper}>
+        <Picker
+          selectedValue={form.training_days}
+          onValueChange={(v) => updateField("training_days", v)}
+          itemStyle={styles.pickerItem}
+        >
+          {[1, 2, 3, 4, 5, 6].map((d) => (
+            <Picker.Item key={d} label={d.toString()} value={d} />
+          ))}
+        </Picker>
+      </View>
       {errors.training_days && (
         <Text style={styles.error}>{errors.training_days}</Text>
       )}
 
       <Text style={styles.label}>Lugar de entrenamiento</Text>
-      <Picker
-        selectedValue={form.training_place}
-        onValueChange={(v) => updateField("training_place", v)}
-        style={styles.picker}
-      >
-        <Picker.Item label="Gimnasio" value="gym" />
-        <Picker.Item label="Casa" value="casa" />
-        <Picker.Item label="Parque" value="parque" />
-      </Picker>
+      <View style={styles.pickerWrapper}>
+        <Picker
+          selectedValue={form.training_place}
+          onValueChange={(v) => updateField("training_place", v)}
+          itemStyle={styles.pickerItem}
+        >
+          <Picker.Item label="Gimnasio" value="gym" />
+          <Picker.Item label="Casa" value="casa" />
+          <Picker.Item label="Parque" value="parque" />
+        </Picker>
+      </View>
 
       <Text style={styles.label}>Objetivo principal</Text>
-      <Picker
-        selectedValue={form.objective}
-        onValueChange={(v) => updateField("objective", v)}
-        style={styles.picker}
-      >
-        <Picker.Item label="Pérdida de peso" value="perdida de peso" />
-        <Picker.Item
-          label="Aumento de masa muscular"
-          value="aumento de masa muscular"
-        />
-        <Picker.Item
-          label="Mejorar la resistencia"
-          value="mejorar la resistencia"
-        />
-      </Picker>
+      <View style={styles.pickerWrapper}>
+        <Picker
+          selectedValue={form.objective}
+          onValueChange={(v) => updateField("objective", v)}
+          itemStyle={styles.pickerItem}
+        >
+          <Picker.Item label="Pérdida de peso" value="perdida de peso" />
+          <Picker.Item
+            label="Aumento de masa muscular"
+            value="aumento de masa muscular"
+          />
+          <Picker.Item
+            label="Mejorar la resistencia"
+            value="mejorar la resistencia"
+          />
+        </Picker>
+      </View>
 
       <Text style={styles.label}>Nivel</Text>
-      <Picker
-        selectedValue={form.level}
-        onValueChange={(v) => updateField("level", v)}
-        style={styles.picker}
-      >
-        <Picker.Item label="Principiante" value="principiante" />
-        <Picker.Item label="Intermedio" value="intermedio" />
-        <Picker.Item label="Avanzado" value="avanzado" />
-      </Picker>
+      <View style={styles.pickerWrapper}>
+        <Picker
+          selectedValue={form.level}
+          onValueChange={(v) => updateField("level", v)}
+          itemStyle={styles.pickerItem}
+        >
+          <Picker.Item label="Principiante" value="principiante" />
+          <Picker.Item label="Intermedio" value="intermedio" />
+          <Picker.Item label="Avanzado" value="avanzado" />
+        </Picker>
+      </View>
 
       <TouchableOpacity
         style={[styles.button, loading && styles.buttonDisabled]}
@@ -151,16 +160,17 @@ export default function RegisterStep2() {
           {loading ? "Registrando..." : "Completar registro"}
         </Text>
       </TouchableOpacity>
-    </ScrollView>
+
+      <BackButton
+        label="Volver al paso 1"
+        onPress={() => router.back()}
+        disabled={loading}
+      />
+    </KeyboardScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: SPACING.lg,
-    backgroundColor: COLORS.background,
-  },
   title: {
     ...(TYPOGRAPHY.h3 as TextStyle),
     color: COLORS.onSurface,
@@ -198,10 +208,17 @@ const styles = StyleSheet.create({
     ...(TYPOGRAPHY.bodyMd as TextStyle),
     color: COLORS.onSurfaceVariant,
   },
-  picker: {
+  pickerWrapper: {
     borderWidth: 1,
     borderColor: COLORS.outlineVariant,
     borderRadius: RADIUS.md,
+    backgroundColor: COLORS.surface,
+    overflow: "hidden",
+    justifyContent: "center",
+  },
+  pickerItem: {
+    color: COLORS.onSurface,
+    fontSize: 16,
   },
   error: {
     ...(TYPOGRAPHY.bodySm as TextStyle),
@@ -214,7 +231,6 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.md,
     alignItems: "center",
     marginTop: SPACING.xl,
-    marginBottom: SPACING.xxl,
   },
   buttonDisabled: {
     backgroundColor: COLORS.primaryLight,

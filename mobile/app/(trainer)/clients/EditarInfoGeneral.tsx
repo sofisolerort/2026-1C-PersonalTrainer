@@ -12,8 +12,9 @@ import {
 import { useLocalSearchParams, router } from "expo-router";
 import { supabase } from "../../../utils/Supabase";
 import { COLORS, SPACING, RADIUS, TYPOGRAPHY } from "@/constants/theme";
+import { KeyboardScreen } from "@/components/KeyboardScreen";
 
-export default function EditarRutina() {
+export default function EditarInfoGeneral() {
   const { clientId } = useLocalSearchParams();
 
   const [routineId, setRoutineId] = useState<string | null>(null);
@@ -78,7 +79,7 @@ export default function EditarRutina() {
   }
 
   return (
-    <View style={styles.container}>
+    <KeyboardScreen>
       <Text style={styles.title}>Editar info general de la Rutina</Text>
 
       <TextInput
@@ -100,16 +101,11 @@ export default function EditarRutina() {
       <TouchableOpacity style={styles.button} onPress={updateRoutine}>
         <Text style={styles.buttonText}>Guardar cambios</Text>
       </TouchableOpacity>
-    </View>
+    </KeyboardScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: SPACING.lg,
-    backgroundColor: COLORS.background,
-  },
   center: {
     flex: 1,
     justifyContent: "center",

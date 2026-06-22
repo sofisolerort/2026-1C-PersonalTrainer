@@ -12,6 +12,7 @@ import {
 import { useLocalSearchParams, router } from "expo-router";
 import { supabase } from "../../../utils/Supabase";
 import { COLORS, SPACING, RADIUS, TYPOGRAPHY } from "@/constants/theme";
+import { KeyboardScreen } from "@/components/KeyboardScreen";
 
 export default function EditarEjercicio() {
   const { exerciseId } = useLocalSearchParams();
@@ -80,7 +81,7 @@ export default function EditarEjercicio() {
   }
 
   return (
-    <View style={styles.container}>
+    <KeyboardScreen>
       <Text style={styles.title}>Editar Ejercicio</Text>
 
       <TextInput
@@ -121,16 +122,11 @@ export default function EditarEjercicio() {
       <TouchableOpacity style={styles.button} onPress={updateExercise}>
         <Text style={styles.buttonText}>Guardar Cambios</Text>
       </TouchableOpacity>
-    </View>
+    </KeyboardScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: SPACING.lg,
-    backgroundColor: COLORS.background,
-  },
   center: {
     flex: 1,
     justifyContent: "center",

@@ -1,5 +1,4 @@
 import {
-  View,
   Text,
   TextInput,
   TouchableOpacity,
@@ -9,6 +8,8 @@ import {
 import { router } from "expo-router";
 import { useRegister1 } from "../../hooks/auth/useRegister1";
 import { COLORS, SPACING, RADIUS, TYPOGRAPHY } from "@/constants/theme";
+import { KeyboardScreen } from "@/components/KeyboardScreen";
+import BackButton from "@/components/BackButton";
 
 export default function RegisterStep1() {
   const {
@@ -32,7 +33,7 @@ export default function RegisterStep1() {
   };
 
   return (
-    <View style={styles.container}>
+    <KeyboardScreen>
       <Text style={styles.title}>Registro - Paso 1</Text>
 
       <TextInput
@@ -72,20 +73,12 @@ export default function RegisterStep1() {
         <Text style={styles.buttonText}>Siguiente</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => router.back()}>
-        <Text style={styles.link}>Volver al login</Text>
-      </TouchableOpacity>
-    </View>
+      <BackButton label="Volver al login" onPress={() => router.back()} />
+    </KeyboardScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    padding: SPACING.lg,
-    backgroundColor: COLORS.background,
-  },
   title: {
     ...(TYPOGRAPHY.h3 as TextStyle),
     color: COLORS.onSurface,
@@ -117,11 +110,5 @@ const styles = StyleSheet.create({
   buttonText: {
     ...(TYPOGRAPHY.button as TextStyle),
     color: COLORS.onPrimary,
-  },
-  link: {
-    ...(TYPOGRAPHY.bodyMd as TextStyle),
-    marginTop: SPACING.md,
-    textAlign: "center",
-    color: COLORS.primary,
   },
 });
