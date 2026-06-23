@@ -1,15 +1,22 @@
 import {
   Text,
-  TextInput,
-  TouchableOpacity,
   StyleSheet,
   TextStyle,
 } from "react-native";
 import { router } from "expo-router";
+
 import { useRegister1 } from "../../hooks/auth/useRegister1";
-import { COLORS, SPACING, RADIUS, TYPOGRAPHY } from "@/constants/theme";
+
 import { KeyboardScreen } from "@/components/KeyboardScreen";
 import BackButton from "@/components/BackButton";
+import { CustomInput } from "@/components/CustomInput";
+import { CustomButton } from "@/components/CustomButton";
+
+import {
+  COLORS,
+  SPACING,
+  TYPOGRAPHY,
+} from "@/constants/theme";
 
 export default function RegisterStep1() {
   const {
@@ -33,82 +40,65 @@ export default function RegisterStep1() {
   };
 
   return (
-    <KeyboardScreen>
+    <KeyboardScreen contentContainerStyle={styles.content}>
       <Text style={styles.title}>Registro - Paso 1</Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        placeholderTextColor={COLORS.onSurfaceVariant}
+      <CustomInput
+        label="Email"
         value={email}
         onChangeText={setEmail}
+        placeholder="ejemplo@gmail.com"
         autoCapitalize="none"
         keyboardType="email-address"
       />
       {errors.email && <Text style={styles.error}>{errors.email}</Text>}
 
-      <TextInput
-        style={styles.input}
-        placeholder="Contraseña"
-        placeholderTextColor={COLORS.onSurfaceVariant}
-        secureTextEntry
+      <CustomInput
+        label="Contraseña"
         value={password}
         onChangeText={setPassword}
-      />
-      {errors.password && <Text style={styles.error}>{errors.password}</Text>}
-
-      <TextInput
-        style={styles.input}
-        placeholder="Repetir contraseña"
-        placeholderTextColor={COLORS.onSurfaceVariant}
         secureTextEntry
+      />
+      {errors.password && (
+        <Text style={styles.error}>{errors.password}</Text>
+      )}
+
+      <CustomInput
+        label="Repetir contraseña"
         value={confirmPassword}
         onChangeText={setConfirmPassword}
+        secureTextEntry
       />
       {errors.confirmPassword && (
         <Text style={styles.error}>{errors.confirmPassword}</Text>
       )}
 
-      <TouchableOpacity style={styles.button} onPress={handleNext}>
-        <Text style={styles.buttonText}>Siguiente</Text>
-      </TouchableOpacity>
+      <CustomButton
+        title="Siguiente"
+        onPress={handleNext}
+      />
 
-      <BackButton label="Volver al login" onPress={() => router.back()} />
+      <BackButton
+        label="Volver al login"
+        onPress={() => router.back()}
+      />
     </KeyboardScreen>
   );
 }
 
 const styles = StyleSheet.create({
+  content: {
+    justifyContent: "center",
+  },
   title: {
     ...(TYPOGRAPHY.h3 as TextStyle),
     color: COLORS.onSurface,
-    marginBottom: SPACING.lg,
+    marginBottom: SPACING.xl,
     textAlign: "center",
-  },
-  input: {
-    ...(TYPOGRAPHY.bodyMd as TextStyle),
-    borderWidth: 1,
-    borderColor: COLORS.outlineVariant,
-    padding: SPACING.md,
-    marginBottom: SPACING.xs,
-    borderRadius: RADIUS.md,
-    backgroundColor: COLORS.surface,
-    color: COLORS.onSurface,
   },
   error: {
     ...(TYPOGRAPHY.bodySm as TextStyle),
     color: COLORS.error,
     marginBottom: SPACING.sm,
-  },
-  button: {
-    backgroundColor: COLORS.primary,
-    padding: SPACING.md,
-    borderRadius: RADIUS.md,
-    alignItems: "center",
-    marginTop: SPACING.sm,
-  },
-  buttonText: {
-    ...(TYPOGRAPHY.button as TextStyle),
-    color: COLORS.onPrimary,
   },
 });

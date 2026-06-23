@@ -5,12 +5,12 @@ import {
   StyleSheet,
   ActivityIndicator,
   FlatList,
-  TouchableOpacity,
   TextStyle,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { useAuth } from "../../context/AuthContext";
-import { supabase } from "../../utils/Supabase";
+import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/utils/Supabase";
+
 import {
   COLORS,
   SPACING,
@@ -18,6 +18,8 @@ import {
   SHADOWS,
   TYPOGRAPHY,
 } from "@/constants/theme";
+
+import { CustomButton } from "@/components/CustomButton";
 
 type Client = {
   id: string;
@@ -34,28 +36,36 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchClients();
-  }, [user]);
+    const fetchClients = async () => {
+      if (!user?.id) {
+        setLoading(false);
+        return;
+      }
 
-  const fetchClients = async () => {
-    if (!user) {
+      setLoading(true);
+
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, full_name, objective, level")
+        .eq("role", "cliente")
+        .eq("trainer_id", user.id);
+
+      if (error) {
+        console.log("ERROR CLIENTS:", error);
+        setClients([]);
+      } else {
+        setClients(data ?? []);
+      }
+
       setLoading(false);
-      return;
-    }
+    };
 
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("id, full_name, objective, level")
-      .eq("role", "cliente")
-      .eq("trainer_id", user.id);
+    fetchClients();
+  }, [user?.id]);
 
-    if (error) {
-      console.log("ERROR CLIENTS:", error);
-    } else {
-      setClients(data || []);
-    }
-
-    setLoading(false);
+  const handleSignOut = async () => {
+    await signOut();
+    router.replace("/(auth)/Login");
   };
 
   if (loading) {
@@ -68,83 +78,109 @@ export default function Home() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Mis Clientes ({clients.length})</Text>
+      <Text style={styles.title}>
+        Mis Clientes ({clients.length})
+      </Text>
 
-      <TouchableOpacity style={styles.logoutBtn} onPress={signOut}>
-        <Text style={styles.logoutText}>Cerrar sesión</Text>
-      </TouchableOpacity>
+      <CustomButton
+        title="Cerrar sesión"
+        onPress={handleSignOut}
+      />
 
       <FlatList
         data={clients}
         keyExtractor={(item) => item.id}
+        contentContainerStyle={
+          clients.length === 0 && { flex: 1 }
+        }
         ListEmptyComponent={
-          <Text style={styles.empty}>Todavía no tenés clientes</Text>
+          <Text style={styles.empty}>
+            Todavía no tenés clientes
+          </Text>
         }
         renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.card}
-            onPress={() => router.push(`/(trainer)/clients/${item.id}`)}
-          >
+          <View style={styles.card}>
             <Text style={styles.name}>{item.full_name}</Text>
-            <Text style={styles.meta}>Objetivo: {item.objective}</Text>
-            <Text style={styles.meta}>Nivel: {item.level}</Text>
-          </TouchableOpacity>
+            <Text style={styles.meta}>
+              Objetivo: {item.objective}
+            </Text>
+            <Text style={styles.meta}>
+              Nivel: {item.level}
+            </Text>
+
+            <CustomButton
+              title="Ver cliente"
+              onPress={() =>
+                router.push(`/(trainer)/clients/${item.id}`)
+              }
+            />
+          </View>
         )}
       />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: SPACING.lg,
-    backgroundColor: COLORS.background,
-  },
-  center: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: COLORS.background,
-  },
-  title: {
-    ...(TYPOGRAPHY.h2 as TextStyle),
-    color: COLORS.onSurface,
-    marginBottom: SPACING.lg,
-  },
-  logoutBtn: {
-    marginBottom: SPACING.lg,
-    padding: SPACING.md,
-    backgroundColor: COLORS.primary,
-    borderRadius: RADIUS.md,
-  },
-  logoutText: {
-    ...(TYPOGRAPHY.bodyMd as TextStyle),
-    fontWeight: "600",
-    color: COLORS.onPrimary,
-    textAlign: "center",
-  },
-  card: {
-    padding: SPACING.md,
-    backgroundColor: COLORS.surface,
-    borderRadius: RADIUS.lg,
-    marginBottom: SPACING.md,
-    ...SHADOWS.card,
-  },
-  name: {
-    ...(TYPOGRAPHY.bodyLg as TextStyle),
-    fontWeight: "600",
-    color: COLORS.onSurface,
-    marginBottom: SPACING.sm,
-  },
-  meta: {
-    ...(TYPOGRAPHY.bodySm as TextStyle),
-    color: COLORS.onSurfaceVariant,
-  },
-  empty: {
-    ...(TYPOGRAPHY.bodyMd as TextStyle),
-    color: COLORS.onSurfaceVariant,
-    textAlign: "center",
-    marginTop: SPACING.xl,
-  },
-});
+
+
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      padding: SPACING.lg,
+      backgroundColor: COLORS.background,
+    },
+
+    center: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: COLORS.background,
+    },
+
+    title: {
+      ...(TYPOGRAPHY.h2 as TextStyle),
+      color: COLORS.onSurface,
+      marginBottom: SPACING.lg,
+    },
+
+    logoutBtn: {
+      marginBottom: SPACING.lg,
+      padding: SPACING.md,
+      backgroundColor: COLORS.primary,
+      borderRadius: RADIUS.md,
+    },
+
+    logoutText: {
+      ...(TYPOGRAPHY.bodyMd as TextStyle),
+      fontWeight: "600",
+      color: COLORS.onPrimary,
+      textAlign: "center",
+    },
+
+    card: {
+      padding: SPACING.md,
+      backgroundColor: COLORS.surface,
+      borderRadius: RADIUS.lg,
+      marginBottom: SPACING.md,
+      ...SHADOWS.card,
+    },
+
+    name: {
+      ...(TYPOGRAPHY.bodyLg as TextStyle),
+      fontWeight: "600",
+      color: COLORS.onSurface,
+      marginBottom: SPACING.sm,
+    },
+
+    meta: {
+      ...(TYPOGRAPHY.bodySm as TextStyle),
+      color: COLORS.onSurfaceVariant,
+    },
+
+    empty: {
+      ...(TYPOGRAPHY.bodyMd as TextStyle),
+      color: COLORS.onSurfaceVariant,
+      textAlign: "center",
+      marginTop: SPACING.xl,
+    },
+  })

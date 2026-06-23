@@ -4,11 +4,12 @@ import { Alert } from "react-native";
 
 type FormData = {
   full_name: string;
-  birth_date: string; // YYYY-MM-DD
+  birth_date: string;
   training_days: number;
   training_place: string;
   objective: string;
   level: string;
+  phone: string; // 👈 AGREGADO
 };
 
 type RegisterData = {
@@ -24,19 +25,23 @@ export const useRegister2 = (registerData: RegisterData) => {
     training_place: "gym",
     objective: "perdida de peso",
     level: "principiante",
+    phone: "", // 👈 AGREGADO
   });
 
   const [loading, setLoading] = useState(false);
 
-  const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>(
-    {},
-  );
+  const [errors, setErrors] = useState<
+    Partial<Record<keyof FormData, string>>
+  >({});
 
   const updateField = <K extends keyof FormData>(
     field: K,
-    value: FormData[K],
+    value: FormData[K]
   ) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
+    setForm((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
 
     if (errors[field]) {
       setErrors((prev) => ({
@@ -51,6 +56,10 @@ export const useRegister2 = (registerData: RegisterData) => {
 
     if (!form.full_name.trim()) {
       newErrors.full_name = "Nombre completo requerido";
+    }
+
+    if (!form.phone.trim()) {
+      newErrors.phone = "Teléfono requerido";
     }
 
     if (!form.birth_date) {
@@ -84,33 +93,23 @@ export const useRegister2 = (registerData: RegisterData) => {
     setLoading(true);
 
     try {
-      // 1) Crear usuario en auth
-      const { data: authData, error: signUpError } = await supabase.auth.signUp(
-        {
+      const { data: authData, error: signUpError } =
+        await supabase.auth.signUp({
           email: registerData.email,
           password: registerData.password,
-        },
-      );
+        });
 
-      if (signUpError) {
-        throw new Error(signUpError.message);
-      }
+      if (signUpError) throw new Error(signUpError.message);
 
       if (!authData.user) {
         throw new Error("No se pudo crear el usuario");
       }
 
-      // 2) Login automático
-      const { error: signInError } = await supabase.auth.signInWithPassword({
+      await supabase.auth.signInWithPassword({
         email: registerData.email,
         password: registerData.password,
       });
 
-      if (signInError) {
-        throw new Error(`Error al iniciar sesión: ${signInError.message}`);
-      }
-
-      // 3) Buscar al entrenador por rol. Si todavía no existe ningún entrenador (ej: al registrar al propio trainer), trainer_id queda null.
       const { data: trainer } = await supabase
         .from("profiles")
         .select("id")
@@ -120,26 +119,27 @@ export const useRegister2 = (registerData: RegisterData) => {
 
       const trainerId = trainer?.id ?? null;
 
-      // 4) Crear perfil
-      const { error: profileError } = await supabase.from("profiles").insert({
-        id: authData.user.id,
-        email: registerData.email,
-        full_name: form.full_name,
-        birth_date: form.birth_date,
-        role: "cliente",
-        trainer_id: trainerId,
-
-        training_days: form.training_days,
-        training_place: form.training_place,
-        objective: form.objective,
-        level: form.level,
-      });
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .insert({
+          id: authData.user.id,
+          email: registerData.email,
+          full_name: form.full_name,
+          phone: form.phone,
+          birth_date: form.birth_date,
+          role: "cliente",
+          trainer_id: trainerId,
+          training_days: form.training_days,
+          training_place: form.training_place,
+          objective: form.objective,
+          level: form.level,
+        });
 
       if (profileError) {
-        throw new Error(`Error al guardar perfil: ${profileError.message}`);
+        throw new Error(profileError.message);
       }
 
-      Alert.alert("Éxito", "Registro completado. Serás redirigido al inicio.");
+      Alert.alert("Éxito", "Registro completado");
 
       onSuccess();
     } catch (error: any) {

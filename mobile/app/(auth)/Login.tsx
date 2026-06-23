@@ -1,25 +1,31 @@
 import { useState } from "react";
 import {
-  View,
   Text,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
   Alert,
-  ActivityIndicator,
   TextStyle,
-  KeyboardAvoidingView,
-  Platform,
 } from "react-native";
 import { router } from "expo-router";
-import { useAuth } from "../../context/AuthContext";
-import { supabase } from "../../utils/Supabase";
-import { COLORS, SPACING, RADIUS, TYPOGRAPHY } from "@/constants/theme";
+
+import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/utils/Supabase";
+
+import { KeyboardScreen } from "@/components/KeyboardScreen";
+import { CustomInput } from "@/components/CustomInput";
+import { CustomButton } from "@/components/CustomButton";
+
+import {
+  COLORS,
+  SPACING,
+  TYPOGRAPHY,
+} from "@/constants/theme";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
   const { signIn } = useAuth();
 
   const handleLogin = async () => {
@@ -27,18 +33,20 @@ export default function Login() {
     setLoading(true);
 
     const { error } = await signIn(email, password);
+
     if (error) {
       Alert.alert("Error", error.message);
       setLoading(false);
       return;
     }
 
-    // Despues del signIn, pedir el rol directo a Supabase (no usar el context)
+    // Tu lógica original (la dejamos igual)
     const {
       data: { session },
     } = await supabase.auth.getSession();
+
     if (!session?.user) {
-      Alert.alert("Error", "No se pudo obtener la sesion");
+      Alert.alert("Error", "No se pudo obtener la sesión");
       setLoading(false);
       return;
     }
@@ -51,7 +59,6 @@ export default function Login() {
 
     const userRole = profile?.role;
 
-    // Redirigir segun rol
     if (userRole === "entrenador") {
       router.replace("/(trainer)/Home");
     } else if (userRole === "cliente") {
@@ -59,94 +66,64 @@ export default function Login() {
     } else {
       Alert.alert(
         "Aviso",
-        "Tu cuenta no tiene un rol asignado. Contactá al administrador.",
+        "Tu cuenta no tiene un rol asignado. Contactá al administrador."
       );
       setLoading(false);
     }
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
+    <KeyboardScreen contentContainerStyle={styles.content}>
       <Text style={styles.title}>Iniciar Sesión</Text>
-      <TextInput
-        placeholder="Email"
-        placeholderTextColor={COLORS.onSurfaceVariant}
+
+      <CustomInput
+        label="Email"
         value={email}
         onChangeText={setEmail}
-        style={styles.input}
+        placeholder="ejemplo@gmail.com"
+        keyboardType="email-address"
         autoCapitalize="none"
-        editable={!loading}
+        autoCorrect={false}
       />
-      <TextInput
-        placeholder="Contraseña"
-        placeholderTextColor={COLORS.onSurfaceVariant}
-        secureTextEntry
+
+      <CustomInput
+        label="Contraseña"
         value={password}
         onChangeText={setPassword}
-        style={styles.input}
-        editable={!loading}
+        secureTextEntry
       />
-      <TouchableOpacity
-        style={[styles.button, loading && styles.buttonDisabled]}
+
+      <CustomButton
+        title="Ingresar"
         onPress={handleLogin}
-        disabled={loading}
-      >
-        {loading ? (
-          <ActivityIndicator color={COLORS.onPrimary} />
-        ) : (
-          <Text style={styles.buttonText}>Ingresar</Text>
-        )}
-      </TouchableOpacity>
+        loading={loading}
+      />
+
       <TouchableOpacity
         onPress={() => router.push("/(auth)/RegisterStep1")}
         disabled={loading}
       >
-        <Text style={styles.link}>¿No tienes cuenta? Regístrate</Text>
+        <Text style={styles.link}>
+          ¿No tienes cuenta? Regístrate
+        </Text>
       </TouchableOpacity>
-    </KeyboardAvoidingView>
+    </KeyboardScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  content: {
     justifyContent: "center",
-    padding: SPACING.lg,
-    backgroundColor: COLORS.background,
   },
   title: {
     ...(TYPOGRAPHY.h3 as TextStyle),
     color: COLORS.onSurface,
-    marginBottom: SPACING.lg,
+    marginBottom: SPACING.xl,
     textAlign: "center",
-  },
-  input: {
-    ...(TYPOGRAPHY.bodyMd as TextStyle),
-    borderWidth: 1,
-    borderColor: COLORS.outlineVariant,
-    padding: SPACING.md,
-    marginBottom: SPACING.md,
-    borderRadius: RADIUS.md,
-    backgroundColor: COLORS.surface,
-    color: COLORS.onSurface,
-  },
-  button: {
-    backgroundColor: COLORS.primary,
-    padding: SPACING.md,
-    borderRadius: RADIUS.md,
-    alignItems: "center",
-  },
-  buttonDisabled: { opacity: 0.6 },
-  buttonText: {
-    ...(TYPOGRAPHY.button as TextStyle),
-    color: COLORS.onPrimary,
   },
   link: {
     ...(TYPOGRAPHY.bodyMd as TextStyle),
-    marginTop: SPACING.md,
+    marginTop: SPACING.lg,
     textAlign: "center",
     color: COLORS.primary,
   },

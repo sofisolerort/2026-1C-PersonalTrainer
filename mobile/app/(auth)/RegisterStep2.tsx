@@ -1,39 +1,46 @@
 import {
-  View,
   Text,
-  TextInput,
-  TouchableOpacity,
   StyleSheet,
-  Alert,
   TextStyle,
+  Alert,
 } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
-import { Picker } from "@react-native-picker/picker";
-import DateTimePicker from "@react-native-community/datetimepicker";
+import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { useState } from "react";
+
 import { useRegister2 } from "../../hooks/auth/useRegister2";
-import { COLORS, SPACING, RADIUS, TYPOGRAPHY } from "@/constants/theme";
+
 import { KeyboardScreen } from "@/components/KeyboardScreen";
 import BackButton from "@/components/BackButton";
+import CustomPicker from "@/components/CustomPicker";
+import { CustomButton } from "@/components/CustomButton";
+import { CustomInput } from "@/components/CustomInput";
+
+import {
+  COLORS,
+  SPACING,
+  TYPOGRAPHY,
+} from "@/constants/theme";
 
 export default function RegisterStep2() {
   const { email, password } = useLocalSearchParams<{
     email: string;
     password: string;
   }>();
-  const { form, updateField, errors, loading, registerComplete } = useRegister2(
-    { email, password },
-  );
+
+  const { form, updateField, errors, loading, registerComplete } =
+    useRegister2({ email, password });
+
   const [showDatePicker, setShowDatePicker] = useState(false);
 
-  // Si faltan datos del paso 1, redirigir al inicio del registro
   if (!email || !password) {
     router.replace("/(auth)/RegisterStep1");
     return null;
   }
 
-  const onDateChange = (event: any, selectedDate?: Date) => {
+  const onDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
     setShowDatePicker(false);
+
     if (selectedDate) {
       const formatted = selectedDate.toISOString().split("T")[0];
       updateField("birth_date", formatted);
@@ -45,124 +52,125 @@ export default function RegisterStep2() {
       await registerComplete(() => {
         router.replace("/(auth)/Login");
       });
-    } catch (error: any) {
-      Alert.alert(
-        "Error",
-        error?.message || "No se pudo completar el registro",
-      );
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "No se pudo completar el registro";
+
+      Alert.alert("Error", message);
     }
   };
 
   return (
-    <KeyboardScreen>
+    <KeyboardScreen contentContainerStyle={styles.content}>
       <Text style={styles.title}>Registro - Paso 2</Text>
 
-      <Text style={styles.label}>Nombre completo</Text>
-      <TextInput
-        style={styles.input}
+      {/* NAME */}
+      <CustomInput
+        label="Nombre completo"
         value={form.full_name}
         onChangeText={(v) => updateField("full_name", v)}
         placeholder="Juan Pérez"
-        placeholderTextColor={COLORS.onSurfaceVariant}
       />
-      {errors.full_name && <Text style={styles.error}>{errors.full_name}</Text>}
+      {errors.full_name && (
+        <Text style={styles.error}>{errors.full_name}</Text>
+      )}
 
+      {/* PHONE */}
+      <CustomInput
+        label="Teléfono"
+        value={form.phone}
+        onChangeText={(v) => updateField("phone", v)}
+        placeholder="11 1234 5678"
+        keyboardType="phone-pad"
+      />
+      {errors.phone && (
+        <Text style={styles.error}>{errors.phone}</Text>
+      )}
+
+      {/* DATE */}
       <Text style={styles.label}>Fecha de nacimiento</Text>
-      <TouchableOpacity
-        style={styles.dateButton}
+
+      <CustomButton
+        title={form.birth_date || "Seleccionar fecha"}
         onPress={() => setShowDatePicker(true)}
-      >
-        <Text
-          style={form.birth_date ? styles.dateText : styles.placeholderText}
-        >
-          {form.birth_date || "Seleccionar fecha"}
-        </Text>
-      </TouchableOpacity>
+      />
+
       {showDatePicker && (
         <DateTimePicker
-          value={form.birth_date ? new Date(form.birth_date) : new Date()}
+          value={
+            form.birth_date
+              ? new Date(form.birth_date)
+              : new Date()
+          }
           mode="date"
           display="default"
           onChange={onDateChange}
         />
       )}
+
       {errors.birth_date && (
         <Text style={styles.error}>{errors.birth_date}</Text>
       )}
 
-      <Text style={styles.label}>Días que entrenas por semana (1-6)</Text>
-      <View style={styles.pickerWrapper}>
-        <Picker
-          selectedValue={form.training_days}
-          onValueChange={(v) => updateField("training_days", v)}
-          itemStyle={styles.pickerItem}
-        >
-          {[1, 2, 3, 4, 5, 6].map((d) => (
-            <Picker.Item key={d} label={d.toString()} value={d} />
-          ))}
-        </Picker>
-      </View>
-      {errors.training_days && (
-        <Text style={styles.error}>{errors.training_days}</Text>
-      )}
+      {/* DAYS */}
+      <CustomPicker
+        label="Días que entrenas por semana"
+        selectedValue={form.training_days}
+        onValueChange={(v) => updateField("training_days", v)}
+        items={[1, 2, 3, 4, 5, 6].map((d) => ({
+          label: d.toString(),
+          value: d,
+        }))}
+        error={errors.training_days}
+      />
 
-      <Text style={styles.label}>Lugar de entrenamiento</Text>
-      <View style={styles.pickerWrapper}>
-        <Picker
-          selectedValue={form.training_place}
-          onValueChange={(v) => updateField("training_place", v)}
-          itemStyle={styles.pickerItem}
-        >
-          <Picker.Item label="Gimnasio" value="gym" />
-          <Picker.Item label="Casa" value="casa" />
-          <Picker.Item label="Parque" value="parque" />
-        </Picker>
-      </View>
+      {/* PLACE */}
+      <CustomPicker
+        label="Lugar de entrenamiento"
+        selectedValue={form.training_place}
+        onValueChange={(v) => updateField("training_place", v)}
+        items={[
+          { label: "Gimnasio", value: "gym" },
+          { label: "Casa", value: "casa" },
+          { label: "Parque", value: "parque" },
+        ]}
+      />
 
-      <Text style={styles.label}>Objetivo principal</Text>
-      <View style={styles.pickerWrapper}>
-        <Picker
-          selectedValue={form.objective}
-          onValueChange={(v) => updateField("objective", v)}
-          itemStyle={styles.pickerItem}
-        >
-          <Picker.Item label="Pérdida de peso" value="perdida de peso" />
-          <Picker.Item
-            label="Aumento de masa muscular"
-            value="aumento de masa muscular"
-          />
-          <Picker.Item
-            label="Mejorar la resistencia"
-            value="mejorar la resistencia"
-          />
-        </Picker>
-      </View>
+      {/* OBJECTIVE */}
+      <CustomPicker
+        label="Objetivo principal"
+        selectedValue={form.objective}
+        onValueChange={(v) => updateField("objective", v)}
+        items={[
+          { label: "Pérdida de peso", value: "perdida de peso" },
+          { label: "Aumento de masa muscular", value: "aumento de masa muscular" },
+          { label: "Mejorar resistencia", value: "mejorar resistencia" },
+        ]}
+      />
 
-      <Text style={styles.label}>Nivel</Text>
-      <View style={styles.pickerWrapper}>
-        <Picker
-          selectedValue={form.level}
-          onValueChange={(v) => updateField("level", v)}
-          itemStyle={styles.pickerItem}
-        >
-          <Picker.Item label="Principiante" value="principiante" />
-          <Picker.Item label="Intermedio" value="intermedio" />
-          <Picker.Item label="Avanzado" value="avanzado" />
-        </Picker>
-      </View>
+      {/* LEVEL */}
+      <CustomPicker
+        label="Nivel"
+        selectedValue={form.level}
+        onValueChange={(v) => updateField("level", v)}
+        items={[
+          { label: "Principiante", value: "principiante" },
+          { label: "Intermedio", value: "intermedio" },
+          { label: "Avanzado", value: "avanzado" },
+        ]}
+      />
 
-      <TouchableOpacity
-        style={[styles.button, loading && styles.buttonDisabled]}
+      {/* SUBMIT */}
+      <CustomButton
+        title={loading ? "Registrando..." : "Completar registro"}
         onPress={handleFinalRegister}
-        disabled={loading}
-      >
-        <Text style={styles.buttonText}>
-          {loading ? "Registrando..." : "Completar registro"}
-        </Text>
-      </TouchableOpacity>
+        loading={loading}
+      />
 
       <BackButton
-        label="Volver al paso 1"
+        label="Volver"
         onPress={() => router.back()}
         disabled={loading}
       />
@@ -171,10 +179,13 @@ export default function RegisterStep2() {
 }
 
 const styles = StyleSheet.create({
+  content: {
+    justifyContent: "center",
+  },
   title: {
     ...(TYPOGRAPHY.h3 as TextStyle),
     color: COLORS.onSurface,
-    marginBottom: SPACING.lg,
+    marginBottom: SPACING.xl,
     textAlign: "center",
   },
   label: {
@@ -184,59 +195,9 @@ const styles = StyleSheet.create({
     marginTop: SPACING.md,
     marginBottom: SPACING.xs,
   },
-  input: {
-    ...(TYPOGRAPHY.bodyMd as TextStyle),
-    borderWidth: 1,
-    borderColor: COLORS.outlineVariant,
-    padding: SPACING.md,
-    borderRadius: RADIUS.md,
-    backgroundColor: COLORS.surface,
-    color: COLORS.onSurface,
-  },
-  dateButton: {
-    borderWidth: 1,
-    borderColor: COLORS.outlineVariant,
-    padding: SPACING.md,
-    borderRadius: RADIUS.md,
-    backgroundColor: COLORS.surfaceContainer,
-  },
-  dateText: {
-    ...(TYPOGRAPHY.bodyMd as TextStyle),
-    color: COLORS.onSurface,
-  },
-  placeholderText: {
-    ...(TYPOGRAPHY.bodyMd as TextStyle),
-    color: COLORS.onSurfaceVariant,
-  },
-  pickerWrapper: {
-    borderWidth: 1,
-    borderColor: COLORS.outlineVariant,
-    borderRadius: RADIUS.md,
-    backgroundColor: COLORS.surface,
-    overflow: "hidden",
-    justifyContent: "center",
-  },
-  pickerItem: {
-    color: COLORS.onSurface,
-    fontSize: 16,
-  },
   error: {
     ...(TYPOGRAPHY.bodySm as TextStyle),
     color: COLORS.error,
     marginTop: SPACING.xs,
-  },
-  button: {
-    backgroundColor: COLORS.primary,
-    padding: SPACING.md,
-    borderRadius: RADIUS.md,
-    alignItems: "center",
-    marginTop: SPACING.xl,
-  },
-  buttonDisabled: {
-    backgroundColor: COLORS.primaryLight,
-  },
-  buttonText: {
-    ...(TYPOGRAPHY.button as TextStyle),
-    color: COLORS.onPrimary,
   },
 });
