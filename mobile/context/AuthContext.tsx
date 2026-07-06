@@ -4,6 +4,7 @@ import React, {
   useEffect,
   useState,
   useCallback,
+  useRef,
 } from "react";
 
 import { Session, User } from "@supabase/supabase-js";
@@ -31,51 +32,60 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [role, setRole] = useState<Role | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const lastRoleUserIdRef = useRef<string | null>(null);
+
   const fetchRole = useCallback(async (userId: string) => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("profiles")
       .select("role")
       .eq("id", userId)
-      .single();
+      .maybeSingle();
 
-    setRole(data?.role ?? null);
-  }, []);
-
-  const init = useCallback(async () => {
-    const { data } = await supabase.auth.getSession();
-
-    const session = data.session;
-
-    setSession(session);
-    setUser(session?.user ?? null);
-
-    if (session?.user) {
-      await fetchRole(session.user.id);
+    if (error) {
+      console.log("ERROR FETCH ROLE:", error.message);
+      setRole(null);
+      return;
     }
 
-    setIsLoading(false);
-  }, [fetchRole]);
+    setRole((data?.role as Role) ?? null);
+    lastRoleUserIdRef.current = userId;
+  }, []);
 
   useEffect(() => {
-    init();
-
     const { data: listener } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
+      async (event, currentSession) => {
+        console.log("AUTH EVENT:", event);
 
-        if (session?.user) {
-          await fetchRole(session.user.id);
-        } else {
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+
+        if (!currentSession?.user) {
           setRole(null);
+          lastRoleUserIdRef.current = null;
+          setIsLoading(false);
+          return;
         }
 
+        const currentUserId = currentSession.user.id;
+
+        // Evita volver a consultar profiles.role cuando solo se refresca el token.
+        if (
+          event === "TOKEN_REFRESHED" &&
+          lastRoleUserIdRef.current === currentUserId
+        ) {
+          setIsLoading(false);
+          return;
+        }
+
+        await fetchRole(currentUserId);
         setIsLoading(false);
       }
     );
 
-    return () => listener.subscription.unsubscribe();
-  }, [init, fetchRole]);
+    return () => {
+      listener.subscription.unsubscribe();
+    };
+  }, [fetchRole]);
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
@@ -96,14 +106,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signOut = async () => {
+    setIsLoading(true);
+
     await supabase.auth.signOut();
+
     setUser(null);
     setSession(null);
     setRole(null);
+    lastRoleUserIdRef.current = null;
+
+    setIsLoading(false);
   };
 
   const refreshRole = async () => {
-    if (user) await fetchRole(user.id);
+    if (!user?.id) return;
+
+    await fetchRole(user.id);
   };
 
   return (

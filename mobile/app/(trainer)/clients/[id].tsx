@@ -1,15 +1,24 @@
-import { useState, useCallback } from "react";
+import { useCallback, useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
   ActivityIndicator,
-  TouchableOpacity,
   TextStyle,
 } from "react-native";
-import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
-import { supabase } from "../../../utils/Supabase";
-import { COLORS, SPACING, RADIUS, TYPOGRAPHY } from "@/constants/theme";
+import {
+  useLocalSearchParams,
+  useRouter,
+  useFocusEffect,
+} from "expo-router";
+
+import { supabase } from "@/utils/Supabase";
+
+import {
+  COLORS,
+  SPACING,
+  TYPOGRAPHY,
+} from "@/constants/theme";
 
 type ClientProfile = {
   id: string;
@@ -19,53 +28,89 @@ type ClientProfile = {
   training_days: number;
 };
 
-export default function ClientDetail() {
-  const { id } = useLocalSearchParams();
+export default function ClientDetailResolver() {
+  const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
 
-  const [client, setClient] = useState<ClientProfile | null>(null);
-  const [hasRoutine, setHasRoutine] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
-      fetchClient();
-    }, [id]),
+      resolveClientRoute();
+    }, [id])
   );
 
-  const fetchClient = async () => {
-    setLoading(true);
-
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", id)
-      .single();
-
-    if (!error && data) {
-      setClient(data);
-
-      const { data: routineData } = await supabase
-        .from("routines")
-        .select("id")
-        .eq("client_id", id)
-        .maybeSingle();
-
-      setHasRoutine(!!routineData);
+  const resolveClientRoute = async () => {
+    if (!id) {
+      setLoading(false);
+      setNotFound(true);
+      return;
     }
 
+    setLoading(true);
+    setNotFound(false);
+
+    const { data: clientData, error: clientError } = await supabase
+      .from("profiles")
+      .select("id, full_name, objective, level, training_days")
+      .eq("id", id)
+      .eq("role", "cliente")
+      .maybeSingle();
+
+    if (clientError || !clientData) {
+      setLoading(false);
+      setNotFound(true);
+      return;
+    }
+
+    const client = clientData as ClientProfile;
+
+    const { data: routineData, error: routineError } = await supabase
+      .from("routines")
+      .select("id")
+      .eq("client_id", client.id)
+      .maybeSingle();
+
     setLoading(false);
+
+    if (routineError) {
+      setNotFound(true);
+      return;
+    }
+
+    if (routineData) {
+      router.replace({
+        pathname: "/(trainer)/clients/VerRutina",
+        params: {
+          clientId: client.id,
+        },
+      } as any);
+
+      return;
+    }
+
+    router.replace({
+      pathname: "/(trainer)/clients/CrearRutina",
+      params: {
+        clientId: client.id,
+      },
+    } as any);
   };
 
   if (loading) {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color={COLORS.primary} />
+
+        <Text style={styles.loadingText}>
+          Abriendo planificación...
+        </Text>
       </View>
     );
   }
 
-  if (!client) {
+  if (notFound) {
     return (
       <View style={styles.center}>
         <Text style={styles.notFound}>Cliente no encontrado</Text>
@@ -74,77 +119,31 @@ export default function ClientDetail() {
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>{client.full_name}</Text>
-
-      <Text style={styles.info}>Objetivo: {client.objective}</Text>
-      <Text style={styles.info}>Nivel: {client.level}</Text>
-      <Text style={styles.info}>Días por semana: {client.training_days}</Text>
-
-      {!hasRoutine ? (
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() =>
-            router.push({
-              pathname: "/(trainer)/clients/CrearRutina",
-              params: { clientId: client.id },
-            } as any)
-          }
-        >
-          <Text style={styles.buttonText}>Crear Rutina</Text>
-        </TouchableOpacity>
-      ) : (
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() =>
-            router.push({
-              pathname: "/(trainer)/clients/VerRutina",
-              params: { clientId: client.id },
-            } as any)
-          }
-        >
-          <Text style={styles.buttonText}>Ver Rutina</Text>
-        </TouchableOpacity>
-      )}
+    <View style={styles.center}>
+      <ActivityIndicator size="large" color={COLORS.primary} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: SPACING.lg,
-    backgroundColor: COLORS.background,
-  },
   center: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: COLORS.background,
+    padding: SPACING.lg,
   },
-  title: {
-    ...(TYPOGRAPHY.h2 as TextStyle),
-    color: COLORS.onSurface,
-    marginBottom: SPACING.lg,
-  },
-  info: {
-    ...(TYPOGRAPHY.bodyLg as TextStyle),
+
+  loadingText: {
+    ...(TYPOGRAPHY.bodyMd as TextStyle),
     color: COLORS.onSurfaceVariant,
-    marginBottom: SPACING.sm,
+    marginTop: SPACING.md,
+    textAlign: "center",
   },
+
   notFound: {
     ...(TYPOGRAPHY.bodyMd as TextStyle),
     color: COLORS.onSurfaceVariant,
-  },
-  button: {
-    marginTop: SPACING.lg,
-    backgroundColor: COLORS.primary,
-    padding: SPACING.md,
-    borderRadius: RADIUS.md,
-  },
-  buttonText: {
-    ...(TYPOGRAPHY.button as TextStyle),
-    color: COLORS.onPrimary,
     textAlign: "center",
   },
 });

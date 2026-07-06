@@ -1,321 +1,482 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   View,
   Text,
-  TextInput,
-  TouchableOpacity,
   StyleSheet,
-  Alert,
-  Pressable,
   ActivityIndicator,
+  Alert,
   TextStyle,
+  ScrollView,
 } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
+import { MaterialIcons } from "@expo/vector-icons";
 
-import { COLORS, SPACING, RADIUS, TYPOGRAPHY } from "@/constants/theme";
 import { supabase } from "@/utils/Supabase";
-import { fetchExercisesByName, ApiExercise } from "@/utils/ExerciseApi";
-import { KeyboardScreen } from "@/components/KeyboardScreen";
+import { CustomInput } from "@/components/CustomInput";
+import { CustomButton } from "@/components/CustomButton";
 
-// 🧠 Diccionario expandido y normalizado (Soporta sinónimos y variaciones)
-const translateInputSmart = (input: string): string => {
-  // Limpiamos acentos para mapear fácilmente
-  const clean = input.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+import {
+  COLORS,
+  SPACING,
+  RADIUS,
+  SHADOWS,
+  TYPOGRAPHY,
+} from "@/constants/theme";
 
-  const map: Record<string, string> = {
-    // Grupos principales
-    pecho: "chest",
-    pectoral: "chest",
-    pectorales: "chest",
-    espalda: "back",
-    dorsal: "back",
-    dorsales: "back",
-    hombro: "shoulder",
-    hombros: "shoulder",
-    deltoides: "shoulder",
-
-    // Brazos
-    biceps: "biceps",
-    triceps: "triceps",
-    antebrazo: "forearm",
-    antebrazos: "forearm",
-    brazo: "arm",
-    brazos: "arm",
-
-    // Piernas / Glúteos
-    pierna: "leg",
-    piernas: "leg",
-    cuadriceps: "quad",
-    femorales: "hamstring",
-    femoral: "hamstring",
-    gluteo: "glute",
-    gluteos: "glute",
-    pantorrilla: "calf",
-    pantorrillas: "calves",
-    gemelos: "calves",
-
-    // Core / Equipamiento
-    abdomen: "abs",
-    abdominales: "abs",
-    abs: "abs",
-    mancuerna: "dumbbell",
-    mancuernas: "dumbbell",
-    barra: "barbell",
-    polea: "cable",
-    sentadilla: "squat",
-    estocadas: "lunge",
-  };
-
-  return map[clean] || clean;
+type RoutineDay = {
+  id: string;
+  day_number: number;
+  day_name: string;
 };
 
 export default function CrearEjercicio() {
-  const { dayId } = useLocalSearchParams();
+  const { dayId, weekNumber } = useLocalSearchParams<{
+    dayId: string;
+    weekNumber?: string;
+  }>();
+
+  const selectedWeek = Number(weekNumber ?? 1);
+
+  const [day, setDay] = useState<RoutineDay | null>(null);
 
   const [name, setName] = useState("");
   const [sets, setSets] = useState("");
   const [reps, setReps] = useState("");
-  const [weight, setWeight] = useState("");
+  const [suggestedWeight, setSuggestedWeight] = useState("");
+  const [rpe, setRpe] = useState("");
 
-  const [query, setQuery] = useState("");
-  const [results, setResults] = useState<ApiExercise[]>([]);
+  const [loadingInitialData, setLoadingInitialData] = useState(true);
   const [loading, setLoading] = useState(false);
 
-  // 🔎 SEARCH POTENCIADO ARTIFICIALMENTE
-  const searchExercises = async () => {
-    try {
-      const cleanQuery = query.trim().toLowerCase();
-      if (!cleanQuery) {
-        Alert.alert("Error", "Ingresá qué ejercicio o músculo buscas");
-        return;
-      }
+  useEffect(() => {
+    fetchDay();
+  }, [dayId]);
 
-      setLoading(true);
+  const fetchDay = async () => {
+    if (!dayId) {
+      setLoadingInitialData(false);
+      return;
+    }
 
-      // Traducción inteligente
-      const searchParam = translateInputSmart(cleanQuery);
+    setLoadingInitialData(true);
 
-      const data: ApiExercise[] = await fetchExercisesByName(searchParam);
+    const { data, error } = await supabase
+      .from("routine_days")
+      .select("id, day_number, day_name")
+      .eq("id", dayId)
+      .maybeSingle();
 
-      // Re-ordenamiento artificial en Frontend (Scoring local)
-      // Como la API solo devuelve 10, nos aseguramos de ordenar arriba los más relevantes
-      const smartOrderedData = data.sort((a, b) => {
-        const targetA = a.target?.toLowerCase() || "";
-        const targetB = b.target?.toLowerCase() || "";
-        const bodyA = a.bodyPart?.toLowerCase() || "";
-        const bodyB = b.bodyPart?.toLowerCase() || "";
-        const nameA = a.name?.toLowerCase() || "";
-        const nameB = b.name?.toLowerCase() || "";
+    if (error || !data) {
+      setDay(null);
+      setLoadingInitialData(false);
+      return;
+    }
 
-        let scoreA = 0;
-        let scoreB = 0;
+    setDay(data);
+    setLoadingInitialData(false);
+  };
 
-        // Si el músculo objetivo o la zona del cuerpo contiene la palabra clave, suma prioridad máxima
-        if (targetA.includes(searchParam) || bodyA.includes(searchParam))
-          scoreA += 10;
-        if (targetB.includes(searchParam) || bodyB.includes(searchParam))
-          scoreB += 10;
+  const createExercise = async () => {
+    if (!dayId) {
+      Alert.alert("Error", "No se encontró el día");
+      return;
+    }
 
-        // Si el nombre del ejercicio empieza exactamente con el término buscado
-        if (nameA.startsWith(searchParam)) scoreA += 5;
-        if (nameB.startsWith(searchParam)) scoreB += 5;
+    if (!name.trim()) {
+      Alert.alert("Error", "Ingresá el nombre del ejercicio");
+      return;
+    }
 
-        return scoreB - scoreA;
+    if (!sets.trim() || !reps.trim()) {
+      Alert.alert("Error", "Series y repeticiones son obligatorias");
+      return;
+    }
+
+    const parsedSets = Number(sets);
+    const parsedReps = Number(reps);
+
+    if (Number.isNaN(parsedSets) || parsedSets <= 0) {
+      Alert.alert("Error", "Las series deben ser un número mayor a 0");
+      return;
+    }
+
+    if (Number.isNaN(parsedReps) || parsedReps <= 0) {
+      Alert.alert("Error", "Las repeticiones deben ser un número mayor a 0");
+      return;
+    }
+
+    const parsedWeight =
+      suggestedWeight.trim() === "" ? null : Number(suggestedWeight.replace(",", "."));
+
+    if (suggestedWeight.trim() !== "" && Number.isNaN(parsedWeight)) {
+      Alert.alert("Error", "El peso debe ser un número válido");
+      return;
+    }
+
+    const parsedRpe =
+      rpe.trim() === "" ? null : Number(rpe.replace(",", "."));
+
+    if (rpe.trim() !== "" && Number.isNaN(parsedRpe)) {
+      Alert.alert("Error", "El RPE debe ser un número válido");
+      return;
+    }
+
+    setLoading(true);
+
+    const { data: exerciseData, error: exerciseError } = await supabase
+      .from("exercises")
+      .insert({
+        routine_day_id: dayId,
+        name: name.trim(),
+        notes: null,
+      })
+      .select("id")
+      .single();
+
+    if (exerciseError || !exerciseData) {
+      setLoading(false);
+      Alert.alert(
+        "Error",
+        exerciseError?.message ?? "No se pudo crear el ejercicio"
+      );
+      return;
+    }
+
+    const { error: progressionError } = await supabase
+      .from("exercise_progressions")
+      .insert({
+        exercise_id: exerciseData.id,
+        week_number: selectedWeek,
+        sets: parsedSets,
+        reps: parsedReps,
+        suggested_weight: parsedWeight,
+        rpe: parsedRpe,
+        hidden: false,
       });
 
-      setResults(smartOrderedData);
+    if (progressionError) {
+      await supabase
+        .from("exercises")
+        .delete()
+        .eq("id", exerciseData.id);
 
-      if (smartOrderedData.length === 0) {
-        Alert.alert(
-          "Aviso",
-          "No se encontraron ejercicios. Prueba buscando directamente en inglés (ej: bench, squat, curl).",
-        );
-      }
-    } catch (error) {
-      console.log("API ERROR:", error);
-      Alert.alert("Error", "No se pudieron obtener datos de la API");
-    } finally {
       setLoading(false);
-    }
-  };
-
-  //  SELECT EXERCISE
-  const selectExercise = (exercise: ApiExercise) => {
-    setName(exercise.name);
-    setResults([]);
-    setQuery("");
-  };
-
-  //  SAVE SUPABASE
-  const createExercise = async () => {
-    if (!name || !sets || !reps) {
-      Alert.alert("Error", "Completa nombre, sets y reps");
+      Alert.alert("Error", progressionError.message);
       return;
     }
 
-    const { error } = await supabase.from("exercises").insert({
-      routine_day_id: dayId,
-      name,
-      sets: Number(sets),
-      reps: Number(reps),
-      suggested_weight: Number(weight || 0),
-    });
+    setLoading(false);
 
-    if (error) {
-      Alert.alert("Error", error.message);
-      return;
-    }
-
-    Alert.alert("Éxito", "Ejercicio creado");
+    Alert.alert("Éxito", "Ejercicio creado con su progresión inicial");
     router.back();
   };
 
+  const previewText = () => {
+    const setsText = sets.trim() || "-";
+    const repsText = reps.trim() || "-";
+    const weightText = suggestedWeight.trim()
+      ? ` @ ${suggestedWeight.trim()} kg`
+      : "";
+    const rpeText = rpe.trim() ? ` · RPE ${rpe.trim()}` : "";
+
+    return `${setsText}x${repsText}${weightText}${rpeText}`;
+  };
+
+  if (loadingInitialData) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </View>
+    );
+  }
+
+  if (!day) {
+    return (
+      <View style={styles.center}>
+        <Text style={styles.empty}>No se encontró el día</Text>
+      </View>
+    );
+  }
+
   return (
-    <KeyboardScreen>
-      <Text style={styles.title}>Crear Ejercicio</Text>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
+    >
+      <View style={styles.header}>
+        <Text style={styles.kicker}>Nuevo ejercicio</Text>
 
-      {/* INPUT DE BÚSQUEDA */}
-      <TextInput
-        placeholder="Ej: pecho, cuadriceps, bench press, polea..."
-        value={query}
-        onChangeText={setQuery}
-        style={styles.input}
-        placeholderTextColor={COLORS.onSurfaceVariant}
-      />
+        <Text style={styles.title}>Cargar ejercicio</Text>
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={searchExercises}
-        disabled={loading}
-      >
-        <Text style={styles.buttonText}>
-          {loading ? "Buscando..." : "Buscar"}
+        <Text style={styles.subtitle}>
+          Día {day.day_number}: {day.day_name}
         </Text>
-      </TouchableOpacity>
+      </View>
 
-      {loading && (
-        <ActivityIndicator
-          size="small"
-          color={COLORS.primary}
-          style={{ marginVertical: SPACING.sm }}
-        />
-      )}
-
-      {/* LISTA DE SUGERENCIAS */}
-      {results.length > 0 && (
-        <View style={styles.resultsContainer}>
-          {results.map((item) => (
-            <Pressable
-              key={item.id}
-              style={styles.card}
-              onPress={() => selectExercise(item)}
-            >
-              <Text style={styles.name}>{item.name}</Text>
-              <Text style={styles.sub}>
-                {item.bodyPart} • {item.target} • {item.equipment}
-              </Text>
-            </Pressable>
-          ))}
+      <View style={styles.contextCard}>
+        <View style={styles.contextIcon}>
+          <MaterialIcons
+            name="event-note"
+            size={26}
+            color={COLORS.onPrimary}
+          />
         </View>
-      )}
 
-      {/* FORMULARIO DE CARGA */}
-      <TextInput
-        placeholder="Nombre del ejercicio"
-        placeholderTextColor={COLORS.onSurfaceVariant}
-        value={name}
-        onChangeText={setName}
-        style={styles.input}
+        <View style={styles.contextInfo}>
+          <Text style={styles.contextTitle}>Semana {selectedWeek}</Text>
+
+          <Text style={styles.contextDescription}>
+            Este ejercicio se va a crear con una progresión inicial para esta
+            semana.
+          </Text>
+        </View>
+      </View>
+
+      <View style={styles.card}>
+        <View style={styles.sectionHeader}>
+          <MaterialIcons
+            name="fitness-center"
+            size={20}
+            color={COLORS.primary}
+          />
+
+          <Text style={styles.sectionTitle}>Datos del ejercicio</Text>
+        </View>
+
+        <CustomInput
+          label="Nombre del ejercicio"
+          value={name}
+          onChangeText={setName}
+          placeholder="Ej: Sentadilla"
+        />
+      </View>
+
+      <View style={styles.card}>
+        <View style={styles.sectionHeader}>
+          <MaterialIcons
+            name="trending-up"
+            size={20}
+            color={COLORS.primary}
+          />
+
+          <Text style={styles.sectionTitle}>Progresión inicial</Text>
+        </View>
+
+        <View style={styles.row}>
+          <View style={styles.half}>
+            <CustomInput
+              label="Series"
+              value={sets}
+              onChangeText={setSets}
+              placeholder="3"
+              keyboardType="numeric"
+            />
+          </View>
+
+          <View style={styles.half}>
+            <CustomInput
+              label="Reps"
+              value={reps}
+              onChangeText={setReps}
+              placeholder="3"
+              keyboardType="numeric"
+            />
+          </View>
+        </View>
+
+        <View style={styles.row}>
+          <View style={styles.half}>
+            <CustomInput
+              label="Peso inicial"
+              value={suggestedWeight}
+              onChangeText={setSuggestedWeight}
+              placeholder="140"
+              keyboardType="decimal-pad"
+            />
+          </View>
+
+          <View style={styles.half}>
+            <CustomInput
+              label="RPE"
+              value={rpe}
+              onChangeText={setRpe}
+              placeholder="8"
+              keyboardType="decimal-pad"
+            />
+          </View>
+        </View>
+
+        <View style={styles.previewBox}>
+          <Text style={styles.previewLabel}>Vista previa</Text>
+
+          <Text style={styles.previewText}>{previewText()}</Text>
+        </View>
+      </View>
+
+      <CustomButton
+        title={loading ? "Creando..." : "Crear ejercicio"}
+        variant="primary"
+        size="md"
+        onPress={createExercise}
+        loading={loading}
       />
 
-      <TextInput
-        placeholder="Sets"
-        placeholderTextColor={COLORS.onSurfaceVariant}
-        value={sets}
-        onChangeText={setSets}
-        keyboardType="numeric"
-        style={styles.input}
-      />
-
-      <TextInput
-        placeholder="Reps"
-        placeholderTextColor={COLORS.onSurfaceVariant}
-        value={reps}
-        onChangeText={setReps}
-        keyboardType="numeric"
-        style={styles.input}
-      />
-
-      <TextInput
-        placeholder="Peso sugerido"
-        placeholderTextColor={COLORS.onSurfaceVariant}
-        value={weight}
-        onChangeText={setWeight}
-        keyboardType="numeric"
-        style={styles.input}
-      />
-
-      <TouchableOpacity style={styles.saveButton} onPress={createExercise}>
-        <Text style={styles.buttonText}>Guardar ejercicio</Text>
-      </TouchableOpacity>
-    </KeyboardScreen>
+      <View style={styles.cancelWrapper}>
+        <CustomButton
+          title="Cancelar"
+          variant="ghost"
+          size="sm"
+          fullWidth={false}
+          onPress={() => router.back()}
+        />
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+  },
+
+  content: {
+    padding: SPACING.lg,
+    paddingBottom: SPACING.xxl,
+  },
+
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: COLORS.background,
+  },
+
+  header: {
+    marginBottom: SPACING.lg,
+  },
+
+  kicker: {
+    ...(TYPOGRAPHY.bodySm as TextStyle),
+    color: COLORS.primary,
+    fontWeight: "700",
+    marginBottom: SPACING.xs,
+  },
+
   title: {
     ...(TYPOGRAPHY.h2 as TextStyle),
     color: COLORS.onSurface,
+    marginBottom: SPACING.xs,
+  },
+
+  subtitle: {
+    ...(TYPOGRAPHY.bodyMd as TextStyle),
+    color: COLORS.onSurfaceVariant,
+    fontWeight: "600",
+  },
+
+  contextCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: COLORS.surface,
+    borderRadius: RADIUS.xl,
+    padding: SPACING.md,
     marginBottom: SPACING.lg,
-  },
-  input: {
-    ...(TYPOGRAPHY.bodyMd as TextStyle),
     borderWidth: 1,
     borderColor: COLORS.outlineVariant,
-    borderRadius: RADIUS.md,
-    padding: SPACING.md,
-    marginBottom: SPACING.md,
-    backgroundColor: COLORS.surface,
-    color: COLORS.onSurface,
+    ...SHADOWS.card,
   },
-  button: {
+
+  contextIcon: {
+    width: 50,
+    height: 50,
+    borderRadius: RADIUS.full,
     backgroundColor: COLORS.primary,
-    padding: SPACING.md,
-    borderRadius: RADIUS.md,
-    marginBottom: SPACING.sm,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: SPACING.md,
   },
-  saveButton: {
-    backgroundColor: COLORS.secondary,
-    padding: SPACING.md,
-    borderRadius: RADIUS.md,
+
+  contextInfo: {
+    flex: 1,
   },
-  buttonText: {
-    ...(TYPOGRAPHY.button as TextStyle),
-    color: COLORS.onPrimary,
-    textAlign: "center",
-  },
-  resultsContainer: {
-    marginBottom: SPACING.sm,
-    borderWidth: 1,
-    borderColor: COLORS.outlineVariant,
-    borderRadius: RADIUS.md,
-    backgroundColor: COLORS.surface,
-  },
-  card: {
-    padding: SPACING.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.outlineVariant,
-  },
-  name: {
-    ...(TYPOGRAPHY.bodyMd as TextStyle),
-    fontWeight: "700",
+
+  contextTitle: {
+    ...(TYPOGRAPHY.bodyLg as TextStyle),
     color: COLORS.onSurface,
-    textTransform: "capitalize",
+    fontWeight: "800",
+    marginBottom: SPACING.xs,
   },
-  sub: {
+
+  contextDescription: {
     ...(TYPOGRAPHY.bodySm as TextStyle),
     color: COLORS.onSurfaceVariant,
-    marginTop: SPACING.xs,
-    textTransform: "capitalize",
+    lineHeight: 19,
+  },
+
+  card: {
+    backgroundColor: COLORS.surface,
+    borderRadius: RADIUS.xl,
+    padding: SPACING.lg,
+    marginBottom: SPACING.lg,
+    borderWidth: 1,
+    borderColor: COLORS.outlineVariant,
+    ...SHADOWS.card,
+  },
+
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: SPACING.sm,
+    marginBottom: SPACING.md,
+  },
+
+  sectionTitle: {
+    ...(TYPOGRAPHY.bodyLg as TextStyle),
+    color: COLORS.onSurface,
+    fontWeight: "800",
+  },
+
+  row: {
+    flexDirection: "row",
+    gap: SPACING.md,
+  },
+
+  half: {
+    flex: 1,
+  },
+
+  previewBox: {
+    backgroundColor: COLORS.background,
+    borderRadius: RADIUS.lg,
+    padding: SPACING.md,
+    borderWidth: 1,
+    borderColor: COLORS.outlineVariant,
+  },
+
+  previewLabel: {
+    ...(TYPOGRAPHY.bodySm as TextStyle),
+    color: COLORS.onSurfaceVariant,
+    marginBottom: SPACING.xs,
+    fontWeight: "600",
+  },
+
+  previewText: {
+    ...(TYPOGRAPHY.bodyLg as TextStyle),
+    color: COLORS.onSurface,
+    fontWeight: "900",
+  },
+
+  cancelWrapper: {
+    alignItems: "center",
+    marginTop: SPACING.md,
+  },
+
+  empty: {
+    ...(TYPOGRAPHY.bodyMd as TextStyle),
+    color: COLORS.onSurfaceVariant,
+    textAlign: "center",
   },
 });

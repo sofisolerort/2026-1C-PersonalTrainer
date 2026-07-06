@@ -8,8 +8,11 @@ import {
   TextStyle,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { MaterialIcons } from "@expo/vector-icons";
+
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/utils/Supabase";
+import { CustomButton } from "@/components/CustomButton";
 
 import {
   COLORS,
@@ -18,8 +21,6 @@ import {
   SHADOWS,
   TYPOGRAPHY,
 } from "@/constants/theme";
-
-import { CustomButton } from "@/components/CustomButton";
 
 type Client = {
   id: string;
@@ -68,6 +69,23 @@ export default function Home() {
     router.replace("/(auth)/Login");
   };
 
+  const goToClient = (clientId: string) => {
+    router.push({
+      pathname: "/(trainer)/clients/[id]",
+      params: { id: clientId },
+    } as any);
+  };
+
+  const getInitials = (name: string) => {
+    const parts = name.trim().split(" ");
+
+    if (parts.length === 1) {
+      return parts[0].charAt(0).toUpperCase();
+    }
+
+    return `${parts[0].charAt(0)}${parts[1].charAt(0)}`.toUpperCase();
+  };
+
   if (loading) {
     return (
       <View style={styles.center}>
@@ -78,42 +96,107 @@ export default function Home() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>
-        Mis Clientes ({clients.length})
-      </Text>
+      <View style={styles.header}>
+        <View>
+          <Text style={styles.kicker}>Panel del entrenador</Text>
+          <Text style={styles.title}>Tus clientes</Text>
+        </View>
 
-      <CustomButton
-        title="Cerrar sesión"
-        onPress={handleSignOut}
-      />
+        <CustomButton
+          title="Salir"
+          variant="ghost"
+          size="sm"
+          fullWidth={false}
+          onPress={handleSignOut}
+        />
+      </View>
+
+      <View style={styles.summaryCard}>
+        <View style={styles.summaryIcon}>
+          <MaterialIcons
+            name="groups"
+            size={28}
+            color={COLORS.onPrimary}
+          />
+        </View>
+
+        <View style={styles.summaryContent}>
+          <Text style={styles.summaryNumber}>{clients.length}</Text>
+          <Text style={styles.summaryLabel}>
+            {clients.length === 1 ? "cliente activo" : "clientes activos"}
+          </Text>
+        </View>
+      </View>
+
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>Listado</Text>
+        <Text style={styles.sectionCount}>{clients.length}</Text>
+      </View>
 
       <FlatList
         data={clients}
         keyExtractor={(item) => item.id}
+        showsVerticalScrollIndicator={false}
         contentContainerStyle={
-          clients.length === 0 && { flex: 1 }
+          clients.length === 0
+            ? styles.emptyListContent
+            : styles.listContent
         }
         ListEmptyComponent={
-          <Text style={styles.empty}>
-            Todavía no tenés clientes
-          </Text>
+          <View style={styles.emptyState}>
+            <View style={styles.emptyIcon}>
+              <MaterialIcons
+                name="person-search"
+                size={34}
+                color={COLORS.onSurfaceVariant}
+              />
+            </View>
+
+            <Text style={styles.emptyTitle}>Todavía no tenés clientes</Text>
+
+            <Text style={styles.emptyDescription}>
+              Cuando un cliente sea asignado a tu perfil, va a aparecer acá.
+            </Text>
+          </View>
         }
         renderItem={({ item }) => (
           <View style={styles.card}>
-            <Text style={styles.name}>{item.full_name}</Text>
-            <Text style={styles.meta}>
-              Objetivo: {item.objective}
-            </Text>
-            <Text style={styles.meta}>
-              Nivel: {item.level}
-            </Text>
+            <View style={styles.cardTop}>
+              <View style={styles.avatar}>
+                <Text style={styles.avatarText}>
+                  {getInitials(item.full_name)}
+                </Text>
+              </View>
 
-            <CustomButton
-              title="Ver cliente"
-              onPress={() =>
-                router.push(`/(trainer)/clients/${item.id}`)
-              }
-            />
+              <View style={styles.clientInfo}>
+                <Text style={styles.name}>{item.full_name}</Text>
+
+                <View style={styles.chipsRow}>
+                  <View style={styles.chip}>
+                    <Text style={styles.chipText}>{item.level}</Text>
+                  </View>
+
+                  <View style={styles.chipSoft}>
+                    <Text style={styles.chipSoftText}>Activo</Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+
+            <View style={styles.objectiveBox}>
+              <Text style={styles.objectiveLabel}>Objetivo</Text>
+              <Text style={styles.objectiveText}>{item.objective}</Text>
+            </View>
+
+            <View style={styles.cardActions}>
+              <CustomButton
+                title="abrir planificacion"
+                variant="secondary"
+                size="sm"
+                fullWidth={false}
+                onPress={() => goToClient(item.id)}
+              />
+            </View>
           </View>
         )}
       />
@@ -121,66 +204,232 @@ export default function Home() {
   );
 }
 
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: SPACING.lg,
+    backgroundColor: COLORS.background,
+  },
 
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: COLORS.background,
+  },
 
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      padding: SPACING.lg,
-      backgroundColor: COLORS.background,
-    },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: SPACING.lg,
+  },
 
-    center: {
-      flex: 1,
-      justifyContent: "center",
-      alignItems: "center",
-      backgroundColor: COLORS.background,
-    },
+  kicker: {
+    ...(TYPOGRAPHY.bodySm as TextStyle),
+    color: COLORS.primary,
+    fontWeight: "700",
+    marginBottom: SPACING.xs,
+  },
 
-    title: {
-      ...(TYPOGRAPHY.h2 as TextStyle),
-      color: COLORS.onSurface,
-      marginBottom: SPACING.lg,
-    },
+  title: {
+    ...(TYPOGRAPHY.h2 as TextStyle),
+    color: COLORS.onSurface,
+  },
 
-    logoutBtn: {
-      marginBottom: SPACING.lg,
-      padding: SPACING.md,
-      backgroundColor: COLORS.primary,
-      borderRadius: RADIUS.md,
-    },
+  summaryCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: COLORS.primary,
+    borderRadius: RADIUS.xl,
+    padding: SPACING.lg,
+    marginBottom: SPACING.xl,
+    ...SHADOWS.card,
+  },
 
-    logoutText: {
-      ...(TYPOGRAPHY.bodyMd as TextStyle),
-      fontWeight: "600",
-      color: COLORS.onPrimary,
-      textAlign: "center",
-    },
+  summaryIcon: {
+    width: 54,
+    height: 54,
+    borderRadius: RADIUS.full,
+    backgroundColor: "rgba(255,255,255,0.18)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: SPACING.md,
+  },
 
-    card: {
-      padding: SPACING.md,
-      backgroundColor: COLORS.surface,
-      borderRadius: RADIUS.lg,
-      marginBottom: SPACING.md,
-      ...SHADOWS.card,
-    },
+  summaryContent: {
+    flex: 1,
+  },
 
-    name: {
-      ...(TYPOGRAPHY.bodyLg as TextStyle),
-      fontWeight: "600",
-      color: COLORS.onSurface,
-      marginBottom: SPACING.sm,
-    },
+  summaryNumber: {
+    fontSize: 32,
+    fontWeight: "800",
+    color: COLORS.onPrimary,
+  },
 
-    meta: {
-      ...(TYPOGRAPHY.bodySm as TextStyle),
-      color: COLORS.onSurfaceVariant,
-    },
+  summaryLabel: {
+    ...(TYPOGRAPHY.bodyMd as TextStyle),
+    color: COLORS.onPrimary,
+    opacity: 0.9,
+  },
 
-    empty: {
-      ...(TYPOGRAPHY.bodyMd as TextStyle),
-      color: COLORS.onSurfaceVariant,
-      textAlign: "center",
-      marginTop: SPACING.xl,
-    },
-  })
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: SPACING.md,
+  },
+
+  sectionTitle: {
+    ...(TYPOGRAPHY.bodyLg as TextStyle),
+    color: COLORS.onSurface,
+    fontWeight: "700",
+  },
+
+  sectionCount: {
+    ...(TYPOGRAPHY.bodySm as TextStyle),
+    color: COLORS.onSurfaceVariant,
+    backgroundColor: COLORS.surface,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.xs,
+    borderRadius: RADIUS.full,
+    overflow: "hidden",
+  },
+
+  listContent: {
+    paddingBottom: SPACING.xxl,
+  },
+
+  card: {
+    backgroundColor: COLORS.surface,
+    borderRadius: RADIUS.xl,
+    padding: SPACING.md,
+    marginBottom: SPACING.md,
+    borderWidth: 1,
+    borderColor: COLORS.outlineVariant,
+    ...SHADOWS.card,
+  },
+
+  cardTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: SPACING.md,
+  },
+
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: RADIUS.full,
+    backgroundColor: COLORS.primary,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: SPACING.md,
+  },
+
+  avatarText: {
+    ...(TYPOGRAPHY.bodyLg as TextStyle),
+    color: COLORS.onPrimary,
+    fontWeight: "800",
+  },
+
+  clientInfo: {
+    flex: 1,
+  },
+
+  name: {
+    ...(TYPOGRAPHY.bodyLg as TextStyle),
+    fontWeight: "700",
+    color: COLORS.onSurface,
+    marginBottom: SPACING.xs,
+  },
+
+  chipsRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: SPACING.xs,
+  },
+
+  chip: {
+    backgroundColor: COLORS.background,
+    borderRadius: RADIUS.full,
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: 4,
+  },
+
+  chipText: {
+    ...(TYPOGRAPHY.bodySm as TextStyle),
+    color: COLORS.onSurfaceVariant,
+    fontWeight: "600",
+  },
+
+  chipSoft: {
+    backgroundColor: "rgba(46, 125, 50, 0.12)",
+    borderRadius: RADIUS.full,
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: 4,
+  },
+
+  chipSoftText: {
+    ...(TYPOGRAPHY.bodySm as TextStyle),
+    color: "#2E7D32",
+    fontWeight: "700",
+  },
+
+  objectiveBox: {
+    backgroundColor: COLORS.background,
+    borderRadius: RADIUS.md,
+    padding: SPACING.md,
+    marginBottom: SPACING.md,
+  },
+
+  objectiveLabel: {
+    ...(TYPOGRAPHY.bodySm as TextStyle),
+    color: COLORS.onSurfaceVariant,
+    marginBottom: SPACING.xs,
+  },
+
+  objectiveText: {
+    ...(TYPOGRAPHY.bodyMd as TextStyle),
+    color: COLORS.onSurface,
+    fontWeight: "600",
+  },
+
+  cardActions: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+  },
+
+  emptyListContent: {
+    flexGrow: 1,
+    justifyContent: "center",
+  },
+
+  emptyState: {
+    alignItems: "center",
+    paddingHorizontal: SPACING.lg,
+  },
+
+  emptyIcon: {
+    width: 72,
+    height: 72,
+    borderRadius: RADIUS.full,
+    backgroundColor: COLORS.surface,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: SPACING.md,
+  },
+
+  emptyTitle: {
+    ...(TYPOGRAPHY.bodyLg as TextStyle),
+    color: COLORS.onSurface,
+    fontWeight: "700",
+    textAlign: "center",
+    marginBottom: SPACING.xs,
+  },
+
+  emptyDescription: {
+    ...(TYPOGRAPHY.bodyMd as TextStyle),
+    color: COLORS.onSurfaceVariant,
+    textAlign: "center",
+  },
+});
