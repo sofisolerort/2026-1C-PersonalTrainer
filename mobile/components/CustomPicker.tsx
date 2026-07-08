@@ -29,6 +29,9 @@ export default function CustomPicker<T>({
           onValueChange={(value) => onValueChange(value)}
           dropdownIconColor={COLORS.onSurface}
           style={styles.picker}
+          // En iOS el color del texto de la rueda se controla con itemStyle,
+          // no con style. Sin esto, en iPhone las opciones se ven vacías.
+          itemStyle={styles.picker}
         >
           {items.map((item) => (
             <Picker.Item
