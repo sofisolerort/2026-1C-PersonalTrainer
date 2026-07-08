@@ -1,11 +1,8 @@
-import {
-  Text,
-  StyleSheet,
-  TextStyle,
-  Alert,
-} from "react-native";
+import { Text, StyleSheet, TextStyle, Alert } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
-import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
+import DateTimePicker, {
+  DateTimePickerEvent,
+} from "@react-native-community/datetimepicker";
 import { useState } from "react";
 
 import { useRegister2 } from "../../hooks/auth/useRegister2";
@@ -16,11 +13,7 @@ import CustomPicker from "@/components/CustomPicker";
 import { CustomButton } from "@/components/CustomButton";
 import { CustomInput } from "@/components/CustomInput";
 
-import {
-  COLORS,
-  SPACING,
-  TYPOGRAPHY,
-} from "@/constants/theme";
+import { COLORS, SPACING, TYPOGRAPHY } from "@/constants/theme";
 
 export default function RegisterStep2() {
   const { email, password } = useLocalSearchParams<{
@@ -28,8 +21,9 @@ export default function RegisterStep2() {
     password: string;
   }>();
 
-  const { form, updateField, errors, loading, registerComplete } =
-    useRegister2({ email, password });
+  const { form, updateField, errors, loading, registerComplete } = useRegister2(
+    { email, password },
+  );
 
   const [showDatePicker, setShowDatePicker] = useState(false);
 
@@ -73,9 +67,7 @@ export default function RegisterStep2() {
         onChangeText={(v) => updateField("full_name", v)}
         placeholder="Juan Pérez"
       />
-      {errors.full_name && (
-        <Text style={styles.error}>{errors.full_name}</Text>
-      )}
+      {errors.full_name && <Text style={styles.error}>{errors.full_name}</Text>}
 
       {/* PHONE */}
       <CustomInput
@@ -85,9 +77,7 @@ export default function RegisterStep2() {
         placeholder="11 1234 5678"
         keyboardType="phone-pad"
       />
-      {errors.phone && (
-        <Text style={styles.error}>{errors.phone}</Text>
-      )}
+      {errors.phone && <Text style={styles.error}>{errors.phone}</Text>}
 
       {/* DATE */}
       <Text style={styles.label}>Fecha de nacimiento</Text>
@@ -99,11 +89,7 @@ export default function RegisterStep2() {
 
       {showDatePicker && (
         <DateTimePicker
-          value={
-            form.birth_date
-              ? new Date(form.birth_date)
-              : new Date()
-          }
+          value={form.birth_date ? new Date(form.birth_date) : new Date()}
           mode="date"
           display="default"
           onChange={onDateChange}
@@ -145,7 +131,10 @@ export default function RegisterStep2() {
         onValueChange={(v) => updateField("objective", v)}
         items={[
           { label: "Pérdida de peso", value: "perdida de peso" },
-          { label: "Aumento de masa muscular", value: "aumento de masa muscular" },
+          {
+            label: "Aumento de masa muscular",
+            value: "aumento de masa muscular",
+          },
           { label: "Mejorar resistencia", value: "mejorar resistencia" },
         ]}
       />
@@ -160,6 +149,14 @@ export default function RegisterStep2() {
           { label: "Intermedio", value: "intermedio" },
           { label: "Avanzado", value: "avanzado" },
         ]}
+      />
+
+      <CustomInput
+        label="Lesiones o limitaciones (opcional)"
+        value={form.injuries}
+        onChangeText={(v) => updateField("injuries", v)}
+        placeholder="Ej: molestia en la rodilla derecha"
+        multiline
       />
 
       {/* SUBMIT */}

@@ -29,6 +29,7 @@ type Profile = {
   training_place: string;
   objective: string;
   level: string;
+  injuries: string | null;
 };
 
 export default function PerfilCliente() {
@@ -52,7 +53,7 @@ export default function PerfilCliente() {
     const { data, error } = await supabase
       .from("profiles")
       .select(
-        `full_name, email, phone, birth_date, training_days, training_place, objective, level`,
+        `full_name, email, phone, birth_date, training_days, training_place, objective, level, injuries`,
       )
       .eq("id", user.id)
       .single();
@@ -124,6 +125,7 @@ export default function PerfilCliente() {
     { label: "Nivel", value: profile.level },
     { label: "Días por semana", value: String(profile.training_days) },
     { label: "Entrena en", value: profile.training_place },
+    { label: "Lesiones", value: profile.injuries || "Ninguna" },
   ];
 
   return (

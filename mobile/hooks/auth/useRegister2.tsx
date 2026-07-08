@@ -9,7 +9,8 @@ type FormData = {
   training_place: string;
   objective: string;
   level: string;
-  phone: string; // 👈 AGREGADO
+  phone: string;
+  injuries: string;
 };
 
 type RegisterData = {
@@ -25,18 +26,19 @@ export const useRegister2 = (registerData: RegisterData) => {
     training_place: "gym",
     objective: "perdida de peso",
     level: "principiante",
-    phone: "", // 👈 AGREGADO
+    phone: "",
+    injuries: "",
   });
 
   const [loading, setLoading] = useState(false);
 
-  const [errors, setErrors] = useState<
-    Partial<Record<keyof FormData, string>>
-  >({});
+  const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>(
+    {},
+  );
 
   const updateField = <K extends keyof FormData>(
     field: K,
-    value: FormData[K]
+    value: FormData[K],
   ) => {
     setForm((prev) => ({
       ...prev,
@@ -93,11 +95,12 @@ export const useRegister2 = (registerData: RegisterData) => {
     setLoading(true);
 
     try {
-      const { data: authData, error: signUpError } =
-        await supabase.auth.signUp({
+      const { data: authData, error: signUpError } = await supabase.auth.signUp(
+        {
           email: registerData.email,
           password: registerData.password,
-        });
+        },
+      );
 
       if (signUpError) throw new Error(signUpError.message);
 
@@ -119,21 +122,20 @@ export const useRegister2 = (registerData: RegisterData) => {
 
       const trainerId = trainer?.id ?? null;
 
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .insert({
-          id: authData.user.id,
-          email: registerData.email,
-          full_name: form.full_name,
-          phone: form.phone,
-          birth_date: form.birth_date,
-          role: "cliente",
-          trainer_id: trainerId,
-          training_days: form.training_days,
-          training_place: form.training_place,
-          objective: form.objective,
-          level: form.level,
-        });
+      const { error: profileError } = await supabase.from("profiles").insert({
+        id: authData.user.id,
+        email: registerData.email,
+        full_name: form.full_name,
+        phone: form.phone,
+        birth_date: form.birth_date,
+        role: "cliente",
+        trainer_id: trainerId,
+        training_days: form.training_days,
+        training_place: form.training_place,
+        objective: form.objective,
+        level: form.level,
+        injuries: form.injuries,
+      });
 
       if (profileError) {
         throw new Error(profileError.message);
