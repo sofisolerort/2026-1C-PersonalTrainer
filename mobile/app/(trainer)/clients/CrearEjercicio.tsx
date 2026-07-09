@@ -44,6 +44,7 @@ export default function CrearEjercicio() {
   const [reps, setReps] = useState("");
   const [suggestedWeight, setSuggestedWeight] = useState("");
   const [rpe, setRpe] = useState("");
+  const [rest, setRest] = useState("");
 
   const [loadingInitialData, setLoadingInitialData] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -106,18 +107,30 @@ export default function CrearEjercicio() {
     }
 
     const parsedWeight =
-      suggestedWeight.trim() === "" ? null : Number(suggestedWeight.replace(",", "."));
+      suggestedWeight.trim() === ""
+        ? null
+        : Number(suggestedWeight.replace(",", "."));
 
     if (suggestedWeight.trim() !== "" && Number.isNaN(parsedWeight)) {
       Alert.alert("Error", "El peso debe ser un número válido");
       return;
     }
 
-    const parsedRpe =
-      rpe.trim() === "" ? null : Number(rpe.replace(",", "."));
+    const parsedRpe = rpe.trim() === "" ? null : Number(rpe.replace(",", "."));
 
     if (rpe.trim() !== "" && Number.isNaN(parsedRpe)) {
       Alert.alert("Error", "El RPE debe ser un número válido");
+      return;
+    }
+
+    const parsedRest =
+      rest.trim() === "" ? null : Number(rest.replace(",", "."));
+
+    if (parsedRest !== null && (Number.isNaN(parsedRest) || parsedRest < 0)) {
+      Alert.alert(
+        "Error",
+        "El descanso debe ser un número válido (en segundos)",
+      );
       return;
     }
 
@@ -137,7 +150,7 @@ export default function CrearEjercicio() {
       setLoading(false);
       Alert.alert(
         "Error",
-        exerciseError?.message ?? "No se pudo crear el ejercicio"
+        exerciseError?.message ?? "No se pudo crear el ejercicio",
       );
       return;
     }
@@ -151,14 +164,12 @@ export default function CrearEjercicio() {
         reps: parsedReps,
         suggested_weight: parsedWeight,
         rpe: parsedRpe,
+        rest_seconds: parsedRest,
         hidden: false,
       });
 
     if (progressionError) {
-      await supabase
-        .from("exercises")
-        .delete()
-        .eq("id", exerciseData.id);
+      await supabase.from("exercises").delete().eq("id", exerciseData.id);
 
       setLoading(false);
       Alert.alert("Error", progressionError.message);
@@ -178,8 +189,9 @@ export default function CrearEjercicio() {
       ? ` @ ${suggestedWeight.trim()} kg`
       : "";
     const rpeText = rpe.trim() ? ` · RPE ${rpe.trim()}` : "";
+    const restText = rest.trim() ? ` · ${rest.trim()}s desc.` : "";
 
-    return `${setsText}x${repsText}${weightText}${rpeText}`;
+    return `${setsText}x${repsText}${weightText}${rpeText}${restText}`;
   };
 
   if (loadingInitialData) {
@@ -217,11 +229,7 @@ export default function CrearEjercicio() {
 
       <View style={styles.contextCard}>
         <View style={styles.contextIcon}>
-          <MaterialIcons
-            name="event-note"
-            size={26}
-            color={COLORS.onPrimary}
-          />
+          <MaterialIcons name="event-note" size={26} color={COLORS.onPrimary} />
         </View>
 
         <View style={styles.contextInfo}>
@@ -255,11 +263,7 @@ export default function CrearEjercicio() {
 
       <View style={styles.card}>
         <View style={styles.sectionHeader}>
-          <MaterialIcons
-            name="trending-up"
-            size={20}
-            color={COLORS.primary}
-          />
+          <MaterialIcons name="trending-up" size={20} color={COLORS.primary} />
 
           <Text style={styles.sectionTitle}>Progresión inicial</Text>
         </View>
@@ -307,6 +311,14 @@ export default function CrearEjercicio() {
             />
           </View>
         </View>
+
+        <CustomInput
+          label="Descanso (segundos)"
+          value={rest}
+          onChangeText={setRest}
+          placeholder="90"
+          keyboardType="numeric"
+        />
 
         <View style={styles.previewBox}>
           <Text style={styles.previewLabel}>Vista previa</Text>

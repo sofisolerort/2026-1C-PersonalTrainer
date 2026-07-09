@@ -9,11 +9,7 @@ import {
   TouchableOpacity,
   TextStyle,
 } from "react-native";
-import {
-  useLocalSearchParams,
-  useRouter,
-  useFocusEffect,
-} from "expo-router";
+import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 
 import { supabase } from "@/utils/Supabase";
@@ -49,6 +45,7 @@ type ExerciseProgression = {
   reps: number;
   suggested_weight: number | null;
   rpe: number | null;
+  rest_seconds: number | null;
   hidden: boolean | null;
 };
 
@@ -74,7 +71,7 @@ export default function DayDetail() {
   useFocusEffect(
     useCallback(() => {
       fetchDayDetail();
-    }, [dayId, selectedWeek])
+    }, [dayId, selectedWeek]),
   );
 
   const fetchDayDetail = async () => {
@@ -136,7 +133,7 @@ export default function DayDetail() {
         baseExercises.map((exercise) => ({
           ...exercise,
           progression: null,
-        }))
+        })),
       );
 
       setLoading(false);
@@ -146,7 +143,7 @@ export default function DayDetail() {
     const exercisesWithProgression = baseExercises.map((exercise) => {
       const progression =
         progressionsData?.find(
-          (progression) => progression.exercise_id === exercise.id
+          (progression) => progression.exercise_id === exercise.id,
         ) ?? null;
 
       return {
@@ -185,7 +182,7 @@ export default function DayDetail() {
             fetchDayDetail();
           },
         },
-      ]
+      ],
     );
   };
 
@@ -221,10 +218,14 @@ export default function DayDetail() {
         ? ` @ ${progression.suggested_weight} kg`
         : "";
 
-    const rpeText =
-      progression.rpe !== null ? ` · RPE ${progression.rpe}` : "";
+    const rpeText = progression.rpe !== null ? ` · RPE ${progression.rpe}` : "";
 
-    return `${progression.sets}x${progression.reps}${weightText}${rpeText}`;
+    const restText =
+      progression.rest_seconds !== null
+        ? ` · ${progression.rest_seconds}s desc.`
+        : "";
+
+    return `${progression.sets}x${progression.reps}${weightText}${rpeText}${restText}`;
   };
 
   const getProgressionStatus = (progression: ExerciseProgression | null) => {
@@ -232,7 +233,7 @@ export default function DayDetail() {
   };
 
   const loadedProgressions = exercises.filter(
-    (exercise) => exercise.progression
+    (exercise) => exercise.progression,
   ).length;
 
   if (loading) {
@@ -270,9 +271,7 @@ export default function DayDetail() {
         keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={
-          exercises.length === 0
-            ? styles.emptyListContent
-            : styles.listContent
+          exercises.length === 0 ? styles.emptyListContent : styles.listContent
         }
         ListHeaderComponent={
           <View>
@@ -295,9 +294,7 @@ export default function DayDetail() {
                 </View>
 
                 <View style={styles.heroContent}>
-                  <Text style={styles.heroTitle}>
-                    Semana {selectedWeek}
-                  </Text>
+                  <Text style={styles.heroTitle}>Semana {selectedWeek}</Text>
 
                   <Text style={styles.heroDescription}>
                     Acá cargás los ejercicios del día y su progresión para esta
@@ -363,9 +360,7 @@ export default function DayDetail() {
               />
             </View>
 
-            <Text style={styles.emptyTitle}>
-              Todavía no hay ejercicios
-            </Text>
+            <Text style={styles.emptyTitle}>Todavía no hay ejercicios</Text>
 
             <Text style={styles.emptyDescription}>
               Agregá el primer ejercicio del día. Después vas a poder cargar la
@@ -412,7 +407,7 @@ export default function DayDetail() {
                 ]}
               >
                 <View style={styles.progressionHeader}>
-                  <View>
+                  <View style={styles.progressionInfo}>
                     <Text style={styles.progressionLabel}>
                       Progresión semana {selectedWeek}
                     </Text>
@@ -447,9 +442,7 @@ export default function DayDetail() {
               <View style={styles.cardActions}>
                 <CustomButton
                   title={
-                    hasProgression
-                      ? "Editar progresión"
-                      : "Cargar progresión"
+                    hasProgression ? "Editar progresión" : "Cargar progresión"
                   }
                   variant={hasProgression ? "outline" : "secondary"}
                   size="sm"
@@ -702,9 +695,13 @@ const styles = StyleSheet.create({
 
   progressionHeader: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     justifyContent: "space-between",
     gap: SPACING.md,
+  },
+
+  progressionInfo: {
+    flex: 1,
   },
 
   progressionLabel: {
@@ -724,6 +721,7 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.full,
     paddingHorizontal: SPACING.sm,
     paddingVertical: 5,
+    flexShrink: 0,
   },
 
   statusPillLoaded: {

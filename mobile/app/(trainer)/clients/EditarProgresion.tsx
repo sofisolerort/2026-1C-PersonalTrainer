@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   Alert,
   Switch,
+  ScrollView,
   TextStyle,
 } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
@@ -14,12 +15,7 @@ import { supabase } from "@/utils/Supabase";
 import { CustomInput } from "@/components/CustomInput";
 import { CustomButton } from "@/components/CustomButton";
 
-import {
-  COLORS,
-  SPACING,
-  RADIUS,
-  TYPOGRAPHY,
-} from "@/constants/theme";
+import { COLORS, SPACING, RADIUS, TYPOGRAPHY } from "@/constants/theme";
 
 type Exercise = {
   id: string;
@@ -35,6 +31,7 @@ type ExerciseProgression = {
   reps: number;
   suggested_weight: number | null;
   rpe: number | null;
+  rest_seconds: number | null;
   hidden: boolean | null;
 };
 
@@ -53,6 +50,7 @@ export default function EditarProgresion() {
   const [reps, setReps] = useState("");
   const [suggestedWeight, setSuggestedWeight] = useState("");
   const [rpe, setRpe] = useState("");
+  const [rest, setRest] = useState("");
   const [hidden, setHidden] = useState(false);
 
   const [loadingInitialData, setLoadingInitialData] = useState(true);
@@ -106,12 +104,13 @@ export default function EditarProgresion() {
       setSuggestedWeight(
         progression.suggested_weight !== null
           ? String(progression.suggested_weight)
-          : ""
+          : "",
       );
-      setRpe(
-        progression.rpe !== null
-          ? String(progression.rpe)
-          : ""
+      setRpe(progression.rpe !== null ? String(progression.rpe) : "");
+      setRest(
+        progression.rest_seconds !== null
+          ? String(progression.rest_seconds)
+          : "",
       );
       setHidden(progression.hidden ?? false);
     } else {
@@ -120,6 +119,7 @@ export default function EditarProgresion() {
       setReps("");
       setSuggestedWeight("");
       setRpe("");
+      setRest("");
       setHidden(false);
     }
 
@@ -151,25 +151,27 @@ export default function EditarProgresion() {
     }
 
     const parsedWeight =
-      suggestedWeight.trim() === ""
-        ? null
-        : Number(suggestedWeight);
+      suggestedWeight.trim() === "" ? null : Number(suggestedWeight);
 
-    if (
-      suggestedWeight.trim() !== "" &&
-      Number.isNaN(parsedWeight)
-    ) {
+    if (suggestedWeight.trim() !== "" && Number.isNaN(parsedWeight)) {
       Alert.alert("Error", "El peso sugerido debe ser un número válido");
       return;
     }
 
-    const parsedRpe =
-      rpe.trim() === ""
-        ? null
-        : Number(rpe);
+    const parsedRpe = rpe.trim() === "" ? null : Number(rpe);
 
     if (rpe.trim() !== "" && Number.isNaN(parsedRpe)) {
       Alert.alert("Error", "El RPE debe ser un número válido");
+      return;
+    }
+
+    const parsedRest = rest.trim() === "" ? null : Number(rest);
+
+    if (parsedRest !== null && (Number.isNaN(parsedRest) || parsedRest < 0)) {
+      Alert.alert(
+        "Error",
+        "El descanso debe ser un número válido (en segundos)",
+      );
       return;
     }
 
@@ -182,6 +184,7 @@ export default function EditarProgresion() {
       reps: parsedReps,
       suggested_weight: parsedWeight,
       rpe: parsedRpe,
+      rest_seconds: parsedRest,
       hidden,
     };
 
@@ -235,7 +238,12 @@ export default function EditarProgresion() {
   }
 
   return (
-    <View style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
+    >
       <Text style={styles.title}>Editar Progresión</Text>
 
       <Text style={styles.exerciseName}>{exercise.name}</Text>
@@ -279,6 +287,14 @@ export default function EditarProgresion() {
           keyboardType="numeric"
         />
 
+        <CustomInput
+          label="Descanso (segundos)"
+          value={rest}
+          onChangeText={setRest}
+          placeholder="Ej: 90"
+          keyboardType="numeric"
+        />
+
         <View style={styles.switchRow}>
           <View style={styles.switchTextContainer}>
             <Text style={styles.switchTitle}>Ocultar esta semana</Text>
@@ -304,15 +320,19 @@ export default function EditarProgresion() {
         onPress={saveProgression}
         loading={saving}
       />
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: SPACING.lg,
     backgroundColor: COLORS.background,
+  },
+
+  content: {
+    padding: SPACING.lg,
+    paddingBottom: SPACING.xxl,
   },
 
   center: {
