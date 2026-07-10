@@ -1,3 +1,4 @@
+import { useCallback, useState } from "react";
 import {
   View,
   Text,
@@ -8,7 +9,7 @@ import {
   TextStyle,
 } from "react-native";
 import { router, useFocusEffect } from "expo-router";
-import { useState, useCallback } from "react";
+import { MaterialIcons } from "@expo/vector-icons";
 import { useAuth } from "../../context/AuthContext";
 import { supabase } from "../../utils/Supabase";
 import {
@@ -25,20 +26,21 @@ type Routine = {
   description: string;
 };
 
-type RoutineDay = {
+type Block = {
   id: string;
-  day_number: number;
-  day_name: string;
+  name: string;
+  description: string | null;
+  weeks: number;
+  order_index: number;
 };
 
 export default function RutinasCliente() {
   const { user } = useAuth();
 
   const [routine, setRoutine] = useState<Routine | null>(null);
-  const [days, setDays] = useState<RoutineDay[]>([]);
+  const [blocks, setBlocks] = useState<Block[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Refetch cada vez que la pantalla recupera el foco (mismo patrón que el trainer).
   useFocusEffect(
     useCallback(() => {
       fetchRoutine();
@@ -53,40 +55,37 @@ export default function RutinasCliente() {
 
     setLoading(true);
 
-    // 1) Mi rutina: la que el entrenador asignó a este cliente.
-    const { data: routineData, error: routineError } = await supabase
+    // 1) Mi rutina
+    const { data: routineData, error } = await supabase
       .from("routines")
       .select("*")
       .eq("client_id", user.id)
       .maybeSingle();
 
-    if (routineError || !routineData) {
+    if (error || !routineData) {
       setRoutine(null);
-      setDays([]);
+      setBlocks([]);
       setLoading(false);
       return;
     }
 
     setRoutine(routineData);
 
-    // 2) Los días de esa rutina, ordenados.
-    const { data: daysData, error: daysError } = await supabase
-      .from("routine_days")
+    // 2) Los bloques de esa rutina
+    const { data: blocksData } = await supabase
+      .from("blocks")
       .select("*")
       .eq("routine_id", routineData.id)
-      .order("day_number", { ascending: true });
+      .order("order_index");
 
-    if (!daysError && daysData) {
-      setDays(daysData);
-    }
-
+    setBlocks(blocksData ?? []);
     setLoading(false);
   };
 
-  const verDia = (day: RoutineDay) => {
+  const openBlock = (block: Block) => {
     router.push({
-      pathname: "/(client)/ejercicios/[id]",
-      params: { id: day.id, dayName: day.day_name },
+      pathname: "/(client)/bloque/[id]",
+      params: { id: block.id, blockName: block.name },
     } as any);
   };
 
@@ -101,7 +100,7 @@ export default function RutinasCliente() {
   if (!routine) {
     return (
       <View style={styles.center}>
-        <Text style={styles.emptyText}>
+        <Text style={styles.muted}>
           Tu entrenador todavía no te asignó una rutina.
         </Text>
       </View>
@@ -115,25 +114,33 @@ export default function RutinasCliente() {
         <Text style={styles.description}>{routine.description}</Text>
       ) : null}
 
-      <Text style={styles.subtitle}>Días de entrenamiento</Text>
+      <Text style={styles.subtitle}>Bloques</Text>
 
       <FlatList
-        data={days}
+        data={blocks}
         keyExtractor={(item) => item.id}
         ListEmptyComponent={
-          <Text style={styles.emptyText}>
-            Todavía no hay días cargados en tu rutina.
-          </Text>
+          <Text style={styles.muted}>Todavía no hay bloques en tu rutina.</Text>
         }
-        renderItem={({ item }) => (
-          <TouchableOpacity style={styles.card} onPress={() => verDia(item)}>
-            <Text style={styles.dayText}>
-              Día {item.day_number}: {item.day_name}
-            </Text>
-            <Text style={styles.dayHint}>Ver ejercicios ›</Text>
+        contentContainerStyle={{ paddingBottom: SPACING.xl }}
+        renderItem={({ item, index }) => (
+          <TouchableOpacity style={styles.card} onPress={() => openBlock(item)}>
+            <View style={styles.cardNumber}>
+              <Text style={styles.cardNumberText}>{index + 1}</Text>
+            </View>
+            <View style={styles.cardInfo}>
+              <Text style={styles.cardTitle}>{item.name}</Text>
+              <Text style={styles.cardSub}>
+                {item.weeks} {item.weeks === 1 ? "semana" : "semanas"}
+              </Text>
+            </View>
+            <MaterialIcons
+              name="chevron-right"
+              size={24}
+              color={COLORS.onSurfaceVariant}
+            />
           </TouchableOpacity>
         )}
-        contentContainerStyle={{ paddingBottom: SPACING.lg }}
       />
     </View>
   );
@@ -143,7 +150,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
-    padding: SPACING.md,
+    padding: SPACING.lg,
   },
   center: {
     flex: 1,
@@ -153,39 +160,59 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
   },
   title: {
-    ...(TYPOGRAPHY.h3 as TextStyle),
+    ...(TYPOGRAPHY.h2 as TextStyle),
     color: COLORS.onSurface,
     marginBottom: SPACING.xs,
   },
   description: {
     ...(TYPOGRAPHY.bodyMd as TextStyle),
     color: COLORS.onSurfaceVariant,
-    marginBottom: SPACING.lg,
+    marginBottom: SPACING.md,
   },
   subtitle: {
     ...(TYPOGRAPHY.bodyLg as TextStyle),
-    fontWeight: "600",
+    fontWeight: "700",
     color: COLORS.onSurface,
     marginBottom: SPACING.md,
   },
   card: {
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: COLORS.surface,
-    padding: SPACING.md,
     borderRadius: RADIUS.lg,
+    padding: SPACING.md,
     marginBottom: SPACING.md,
     ...SHADOWS.card,
   },
-  dayText: {
-    ...(TYPOGRAPHY.bodyLg as TextStyle),
-    fontWeight: "600",
-    color: COLORS.onSurface,
+  cardNumber: {
+    width: 40,
+    height: 40,
+    borderRadius: RADIUS.full,
+    borderWidth: 1,
+    borderColor: COLORS.outlineVariant,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: SPACING.md,
   },
-  dayHint: {
-    ...(TYPOGRAPHY.bodySm as TextStyle),
+  cardNumberText: {
+    ...(TYPOGRAPHY.bodyLg as TextStyle),
     color: COLORS.primary,
+    fontWeight: "800",
+  },
+  cardInfo: {
+    flex: 1,
+  },
+  cardTitle: {
+    ...(TYPOGRAPHY.bodyLg as TextStyle),
+    color: COLORS.onSurface,
+    fontWeight: "700",
+  },
+  cardSub: {
+    ...(TYPOGRAPHY.bodySm as TextStyle),
+    color: COLORS.onSurfaceVariant,
     marginTop: SPACING.xs,
   },
-  emptyText: {
+  muted: {
     ...(TYPOGRAPHY.bodyMd as TextStyle),
     color: COLORS.onSurfaceVariant,
     textAlign: "center",
