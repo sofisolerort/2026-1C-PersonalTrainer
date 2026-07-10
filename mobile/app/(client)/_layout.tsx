@@ -55,6 +55,7 @@ export default function ClienteLayout() {
       <Stack.Screen name="Home" options={{ title: "Inicio" }} />
       <Stack.Screen name="Perfil" options={{ title: "Mi Perfil" }} />
       <Stack.Screen name="Rutinas" options={{ title: "Mis Rutinas" }} />
+      <Stack.Screen name="Progreso" options={{ title: "Mi Progreso" }} />
       <Stack.Screen name="bloque/[id]" options={{ title: "Bloque" }} />
       <Stack.Screen name="ejercicios/[id]" options={{ title: "Día" }} />
     </Stack>

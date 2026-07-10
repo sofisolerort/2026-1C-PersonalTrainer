@@ -50,7 +50,7 @@ export default function ClienteHome() {
 
   const irAPerfil = () => router.push("/(client)/Perfil");
   const irARutinas = () => router.push("/(client)/Rutinas");
- 
+  const irAProgreso = () => router.push("/(client)/Progreso");
 
   return (
     <ScrollView style={styles.container}>
@@ -74,9 +74,11 @@ export default function ClienteHome() {
           <Text style={styles.cardDesc}>Tus entrenamientos asignados</Text>
         </TouchableOpacity>
 
-        
-
-       
+        <TouchableOpacity style={styles.card} onPress={irAProgreso}>
+          <Text style={styles.cardEmoji}>📈</Text>
+          <Text style={styles.cardTitle}>Progreso</Text>
+          <Text style={styles.cardDesc}>Tu carga usada por semana</Text>
+        </TouchableOpacity>
       </View>
 
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>

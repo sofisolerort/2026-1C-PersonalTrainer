@@ -342,10 +342,12 @@ const styles = StyleSheet.create({
     borderColor: COLORS.outlineVariant,
     borderRadius: RADIUS.md,
     paddingHorizontal: SPACING.sm,
+    paddingVertical: 0,
     backgroundColor: COLORS.background,
     color: COLORS.onSurface,
     textAlign: "center",
     textAlignVertical: "center",
+    includeFontPadding: false,
   },
   kg: {
     ...(TYPOGRAPHY.bodySm as TextStyle),

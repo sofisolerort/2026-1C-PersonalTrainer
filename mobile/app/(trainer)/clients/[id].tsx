@@ -93,6 +93,15 @@ export default function ClientDetail() {
     } as any);
   };
 
+  const goToProgress = () => {
+    if (!client) return;
+
+    router.push({
+      pathname: "/(trainer)/clients/Progreso",
+      params: { clientId: client.id },
+    } as any);
+  };
+
   if (loading) {
     return (
       <View style={styles.center}>
@@ -146,6 +155,15 @@ export default function ClientDetail() {
         size="md"
         onPress={goToRoutine}
       />
+
+      <View style={styles.secondaryButton}>
+        <CustomButton
+          title="Ver progreso"
+          variant="secondary"
+          size="md"
+          onPress={goToProgress}
+        />
+      </View>
     </ScrollView>
   );
 }
@@ -215,5 +233,9 @@ const styles = StyleSheet.create({
     ...(TYPOGRAPHY.bodyMd as TextStyle),
     color: COLORS.onSurfaceVariant,
     textAlign: "center",
+  },
+
+  secondaryButton: {
+    marginTop: SPACING.md,
   },
 });

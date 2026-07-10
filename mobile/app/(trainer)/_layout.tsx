@@ -13,6 +13,7 @@ export default function TrainerLayout() {
       <Stack.Screen name="Home" options={{ title: "Panel del Entrenador" }} />
 
       <Stack.Screen name="clients/[id]" options={{ title: "Cliente" }} />
+      <Stack.Screen name="clients/Progreso" options={{ title: "Progreso" }} />
 
       <Stack.Screen
         name="clients/CrearRutina"
