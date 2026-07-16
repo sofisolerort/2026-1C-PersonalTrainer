@@ -1,19 +1,18 @@
-import { useEffect, useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
   ActivityIndicator,
-  Alert,
   TextStyle,
   ScrollView,
+  Pressable,
 } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 
-import { supabase } from "@/utils/Supabase";
 import { CustomInput } from "@/components/CustomInput";
 import { CustomButton } from "@/components/CustomButton";
+import { useCreateExercise } from "@/hooks/trainer/useCreateExercise";
 
 import {
   COLORS,
@@ -23,176 +22,49 @@ import {
   TYPOGRAPHY,
 } from "@/constants/theme";
 
-type RoutineDay = {
-  id: string;
-  day_number: number;
-  day_name: string;
-};
-
 export default function CrearEjercicio() {
   const { dayId, weekNumber } = useLocalSearchParams<{
     dayId: string;
     weekNumber?: string;
   }>();
 
-  const selectedWeek = Number(weekNumber ?? 1);
+  const {
+    selectedWeek,
 
-  const [day, setDay] = useState<RoutineDay | null>(null);
+    day,
 
-  const [name, setName] = useState("");
-  const [sets, setSets] = useState("");
-  const [reps, setReps] = useState("");
-  const [suggestedWeight, setSuggestedWeight] = useState("");
-  const [rpe, setRpe] = useState("");
-  const [rest, setRest] = useState("");
+    apiQuery,
+    setApiQuery,
+    apiResults,
+    selectedApiExercise,
+    searchingExercises,
+    searchExercises,
+    selectExercise,
+    clearSearch,
 
-  const [loadingInitialData, setLoadingInitialData] = useState(true);
-  const [loading, setLoading] = useState(false);
+    name,
+    handleNameChange,
 
-  useEffect(() => {
-    fetchDay();
-  }, [dayId]);
+    sets,
+    setSets,
+    reps,
+    setReps,
+    suggestedWeight,
+    setSuggestedWeight,
+    rpe,
+    setRpe,
+    rest,
+    setRest,
 
-  const fetchDay = async () => {
-    if (!dayId) {
-      setLoadingInitialData(false);
-      return;
-    }
+    loadingInitialData,
+    loading,
 
-    setLoadingInitialData(true);
-
-    const { data, error } = await supabase
-      .from("routine_days")
-      .select("id, day_number, day_name")
-      .eq("id", dayId)
-      .maybeSingle();
-
-    if (error || !data) {
-      setDay(null);
-      setLoadingInitialData(false);
-      return;
-    }
-
-    setDay(data);
-    setLoadingInitialData(false);
-  };
-
-  const createExercise = async () => {
-    if (!dayId) {
-      Alert.alert("Error", "No se encontró el día");
-      return;
-    }
-
-    if (!name.trim()) {
-      Alert.alert("Error", "Ingresá el nombre del ejercicio");
-      return;
-    }
-
-    if (!sets.trim() || !reps.trim()) {
-      Alert.alert("Error", "Series y repeticiones son obligatorias");
-      return;
-    }
-
-    const parsedSets = Number(sets);
-    const parsedReps = Number(reps);
-
-    if (Number.isNaN(parsedSets) || parsedSets <= 0) {
-      Alert.alert("Error", "Las series deben ser un número mayor a 0");
-      return;
-    }
-
-    if (Number.isNaN(parsedReps) || parsedReps <= 0) {
-      Alert.alert("Error", "Las repeticiones deben ser un número mayor a 0");
-      return;
-    }
-
-    const parsedWeight =
-      suggestedWeight.trim() === ""
-        ? null
-        : Number(suggestedWeight.replace(",", "."));
-
-    if (suggestedWeight.trim() !== "" && Number.isNaN(parsedWeight)) {
-      Alert.alert("Error", "El peso debe ser un número válido");
-      return;
-    }
-
-    const parsedRpe = rpe.trim() === "" ? null : Number(rpe.replace(",", "."));
-
-    if (rpe.trim() !== "" && Number.isNaN(parsedRpe)) {
-      Alert.alert("Error", "El RPE debe ser un número válido");
-      return;
-    }
-
-    const parsedRest =
-      rest.trim() === "" ? null : Number(rest.replace(",", "."));
-
-    if (parsedRest !== null && (Number.isNaN(parsedRest) || parsedRest < 0)) {
-      Alert.alert(
-        "Error",
-        "El descanso debe ser un número válido (en segundos)",
-      );
-      return;
-    }
-
-    setLoading(true);
-
-    const { data: exerciseData, error: exerciseError } = await supabase
-      .from("exercises")
-      .insert({
-        routine_day_id: dayId,
-        name: name.trim(),
-        notes: null,
-      })
-      .select("id")
-      .single();
-
-    if (exerciseError || !exerciseData) {
-      setLoading(false);
-      Alert.alert(
-        "Error",
-        exerciseError?.message ?? "No se pudo crear el ejercicio",
-      );
-      return;
-    }
-
-    const { error: progressionError } = await supabase
-      .from("exercise_progressions")
-      .insert({
-        exercise_id: exerciseData.id,
-        week_number: selectedWeek,
-        sets: parsedSets,
-        reps: parsedReps,
-        suggested_weight: parsedWeight,
-        rpe: parsedRpe,
-        rest_seconds: parsedRest,
-        hidden: false,
-      });
-
-    if (progressionError) {
-      await supabase.from("exercises").delete().eq("id", exerciseData.id);
-
-      setLoading(false);
-      Alert.alert("Error", progressionError.message);
-      return;
-    }
-
-    setLoading(false);
-
-    Alert.alert("Éxito", "Ejercicio creado con su progresión inicial");
-    router.back();
-  };
-
-  const previewText = () => {
-    const setsText = sets.trim() || "-";
-    const repsText = reps.trim() || "-";
-    const weightText = suggestedWeight.trim()
-      ? ` @ ${suggestedWeight.trim()} kg`
-      : "";
-    const rpeText = rpe.trim() ? ` · RPE ${rpe.trim()}` : "";
-    const restText = rest.trim() ? ` · ${rest.trim()}s desc.` : "";
-
-    return `${setsText}x${repsText}${weightText}${rpeText}${restText}`;
-  };
+    createExercise,
+    previewText,
+  } = useCreateExercise({
+    dayId,
+    weekNumber,
+  });
 
   if (loadingInitialData) {
     return (
@@ -229,7 +101,11 @@ export default function CrearEjercicio() {
 
       <View style={styles.contextCard}>
         <View style={styles.contextIcon}>
-          <MaterialIcons name="event-note" size={26} color={COLORS.onPrimary} />
+          <MaterialIcons
+            name="event-note"
+            size={26}
+            color={COLORS.onPrimary}
+          />
         </View>
 
         <View style={styles.contextInfo}>
@@ -244,6 +120,83 @@ export default function CrearEjercicio() {
 
       <View style={styles.card}>
         <View style={styles.sectionHeader}>
+          <MaterialIcons name="search" size={20} color={COLORS.primary} />
+
+          <Text style={styles.sectionTitle}>Buscar en la API</Text>
+        </View>
+
+        <Text style={styles.helperText}>
+          Opcional. Buscá por ejercicio o grupo muscular. Si elegís una opción,
+          se completa el nombre del ejercicio automáticamente.
+        </Text>
+
+        <CustomInput
+          label="Ejercicio o músculo"
+          value={apiQuery}
+          onChangeText={setApiQuery}
+          placeholder="Ej: pecho, cuádriceps, sentadilla"
+        />
+
+        <CustomButton
+          title={searchingExercises ? "Buscando..." : "Buscar ejercicios"}
+          variant="primary"
+          size="md"
+          onPress={searchExercises}
+          loading={searchingExercises}
+        />
+
+        {apiResults.length > 0 && (
+          <View style={styles.resultsContainer}>
+            <View style={styles.resultsHeader}>
+              <Text style={styles.resultsTitle}>
+                {apiResults.length} resultados
+              </Text>
+
+              <Pressable onPress={clearSearch} hitSlop={10}>
+                <Text style={styles.clearText}>Limpiar</Text>
+              </Pressable>
+            </View>
+
+            {apiResults.map((exercise, index) => (
+              <Pressable
+                key={exercise.id}
+                style={[
+                  styles.exerciseResult,
+                  index === apiResults.length - 1 &&
+                  styles.exerciseResultLast,
+                ]}
+                onPress={() => selectExercise(exercise)}
+              >
+                <View style={styles.resultIcon}>
+                  <MaterialIcons
+                    name="fitness-center"
+                    size={20}
+                    color={COLORS.primary}
+                  />
+                </View>
+
+                <View style={styles.resultInfo}>
+                  <Text style={styles.resultName}>{exercise.name}</Text>
+
+                  <Text style={styles.resultDescription}>
+                    {exercise.bodyPart} · {exercise.target} ·{" "}
+                    {exercise.equipment}
+                  </Text>
+                </View>
+
+                <MaterialIcons
+                  name="chevron-right"
+                  size={24}
+                  color={COLORS.onSurfaceVariant}
+                />
+              </Pressable>
+            ))}
+          </View>
+        )}
+      </View>
+
+      <View style={styles.card}>
+        <View style={styles.sectionHeader}>
           <MaterialIcons
             name="fitness-center"
             size={20}
@@ -253,12 +206,36 @@ export default function CrearEjercicio() {
           <Text style={styles.sectionTitle}>Datos del ejercicio</Text>
         </View>
 
+        <Text style={styles.helperText}>
+          Este es el nombre real que se guarda en la rutina. Podés escribirlo
+          manualmente aunque no uses la API.
+        </Text>
+
         <CustomInput
           label="Nombre del ejercicio"
           value={name}
-          onChangeText={setName}
+          onChangeText={handleNameChange}
           placeholder="Ej: Sentadilla"
         />
+
+        {selectedApiExercise && (
+          <View style={styles.selectedBox}>
+            <View style={styles.selectedHeader}>
+              <MaterialIcons
+                name="check-circle"
+                size={18}
+                color={COLORS.primary}
+              />
+
+              <Text style={styles.selectedLabel}>Seleccionado desde API</Text>
+            </View>
+
+            <Text style={styles.selectedText}>
+              {selectedApiExercise.bodyPart} · {selectedApiExercise.target} ·{" "}
+              {selectedApiExercise.equipment}
+            </Text>
+          </View>
+        )}
       </View>
 
       <View style={styles.card}>
@@ -451,6 +428,83 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
 
+  helperText: {
+    ...(TYPOGRAPHY.bodySm as TextStyle),
+    color: COLORS.onSurfaceVariant,
+    lineHeight: 19,
+    marginBottom: SPACING.md,
+  },
+
+  resultsContainer: {
+    marginTop: SPACING.md,
+    borderWidth: 1,
+    borderColor: COLORS.outlineVariant,
+    borderRadius: RADIUS.lg,
+    overflow: "hidden",
+  },
+
+  resultsHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: SPACING.md,
+    backgroundColor: COLORS.background,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.outlineVariant,
+  },
+
+  resultsTitle: {
+    ...(TYPOGRAPHY.bodySm as TextStyle),
+    color: COLORS.onSurface,
+    fontWeight: "800",
+  },
+
+  clearText: {
+    ...(TYPOGRAPHY.bodySm as TextStyle),
+    color: COLORS.primary,
+    fontWeight: "700",
+  },
+
+  exerciseResult: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: SPACING.md,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.outlineVariant,
+  },
+
+  exerciseResultLast: {
+    borderBottomWidth: 0,
+  },
+
+  resultIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: RADIUS.full,
+    backgroundColor: COLORS.background,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: SPACING.md,
+  },
+
+  resultInfo: {
+    flex: 1,
+  },
+
+  resultName: {
+    ...(TYPOGRAPHY.bodyMd as TextStyle),
+    color: COLORS.onSurface,
+    fontWeight: "800",
+    textTransform: "capitalize",
+    marginBottom: SPACING.xs,
+  },
+
+  resultDescription: {
+    ...(TYPOGRAPHY.bodySm as TextStyle),
+    color: COLORS.onSurfaceVariant,
+    textTransform: "capitalize",
+  },
+
   row: {
     flexDirection: "row",
     gap: SPACING.md,
@@ -491,4 +545,32 @@ const styles = StyleSheet.create({
     color: COLORS.onSurfaceVariant,
     textAlign: "center",
   },
+  selectedBox: {
+    backgroundColor: COLORS.background,
+    borderRadius: RADIUS.lg,
+    padding: SPACING.md,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+  },
+
+  selectedHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: SPACING.xs,
+    marginBottom: SPACING.xs,
+  },
+
+  selectedLabel: {
+    ...(TYPOGRAPHY.bodySm as TextStyle),
+    color: COLORS.primary,
+    fontWeight: "800",
+  },
+
+  selectedText: {
+    ...(TYPOGRAPHY.bodySm as TextStyle),
+    color: COLORS.onSurfaceVariant,
+    textTransform: "capitalize",
+  },
+
+
 });

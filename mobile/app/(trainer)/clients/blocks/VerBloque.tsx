@@ -99,44 +99,33 @@ export default function VerBloque() {
     setLoading(false);
   };
 
-  const deleteBlock = async () => {
+  const goToEditBlock = () => {
     if (!block) return;
 
-    Alert.alert(
-      "Eliminar bloque",
-      "Se eliminará el bloque con sus días, ejercicios y progresiones.",
-      [
-        {
-          text: "Cancelar",
-          style: "cancel",
-        },
-        {
-          text: "Eliminar",
-          style: "destructive",
-          onPress: async () => {
-            const { error } = await supabase
-              .from("blocks")
-              .delete()
-              .eq("id", block.id);
+    router.push({
+      pathname: "/(trainer)/clients/blocks/EditarBloque",
+      params: {
+        blockId: block.id,
+      },
+    } as any);
+  };
 
-            if (error) {
-              Alert.alert("Error", error.message);
-              return;
-            }
+  const goToDeleteBlock = () => {
+    if (!block) return;
 
-            Alert.alert("Éxito", "Bloque eliminado");
-            router.back();
-          },
-        },
-      ]
-    );
+    router.push({
+      pathname: "/(trainer)/clients/blocks/EliminarBloque",
+      params: {
+        blockId: block.id,
+      },
+    } as any);
   };
 
   const goToCreateDay = () => {
     if (!block) return;
 
     router.push({
-      pathname: "/(trainer)/clients/CrearDia",
+      pathname: "/(trainer)/clients/days/CrearDia",
       params: {
         blockId: block.id,
       },
@@ -145,7 +134,7 @@ export default function VerBloque() {
 
   const goToDayDetail = (day: RoutineDay) => {
     router.push({
-      pathname: "/(trainer)/clients/DayDetail",
+      pathname: "/(trainer)/clients/days/DayDetail",
       params: {
         dayId: day.id,
         dayName: day.day_name,
@@ -182,10 +171,7 @@ export default function VerBloque() {
     );
   }
 
-  const weeks = Array.from(
-    { length: block.weeks },
-    (_, index) => index + 1
-  );
+  const weeks = Array.from({ length: block.weeks }, (_, index) => index + 1);
 
   return (
     <View style={styles.container}>
@@ -194,9 +180,7 @@ export default function VerBloque() {
         keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={
-          days.length === 0
-            ? styles.emptyListContent
-            : styles.listContent
+          days.length === 0 ? styles.emptyListContent : styles.listContent
         }
         ListHeaderComponent={
           <View>
@@ -224,6 +208,32 @@ export default function VerBloque() {
                     {block.description || "Sin descripción cargada"}
                   </Text>
                 </View>
+
+                <View style={styles.heroActions}>
+                  <TouchableOpacity
+                    activeOpacity={0.75}
+                    style={styles.iconActionButton}
+                    onPress={goToEditBlock}
+                  >
+                    <MaterialIcons
+                      name="edit"
+                      size={19}
+                      color={COLORS.primary}
+                    />
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    activeOpacity={0.75}
+                    style={[styles.iconActionButton, styles.iconDangerButton]}
+                    onPress={goToDeleteBlock}
+                  >
+                    <MaterialIcons
+                      name="delete-outline"
+                      size={19}
+                      color={COLORS.error}
+                    />
+                  </TouchableOpacity>
+                </View>
               </View>
 
               <View style={styles.statsRow}>
@@ -247,7 +257,7 @@ export default function VerBloque() {
 
                 <View style={styles.statItem}>
                   <Text style={styles.statNumber}>{selectedWeek}</Text>
-                  <Text style={styles.statLabel}> semana actual</Text>
+                  <Text style={styles.statLabel}>semana actual</Text>
                 </View>
               </View>
             </View>
@@ -346,9 +356,7 @@ export default function VerBloque() {
               />
             </View>
 
-            <Text style={styles.emptyTitle}>
-              Todavía no hay días cargados
-            </Text>
+            <Text style={styles.emptyTitle}>Todavía no hay días cargados</Text>
 
             <Text style={styles.emptyDescription}>
               Creá el primer día del bloque. Después vas a poder agregar
@@ -364,9 +372,7 @@ export default function VerBloque() {
           >
             <View style={styles.dayCardTop}>
               <View style={styles.dayNumberBox}>
-                <Text style={styles.dayNumberText}>
-                  {item.day_number}
-                </Text>
+                <Text style={styles.dayNumberText}>{item.day_number}</Text>
               </View>
 
               <View style={styles.dayInfo}>
@@ -392,9 +398,7 @@ export default function VerBloque() {
                   color={COLORS.primary}
                 />
 
-                <Text style={styles.dayPillText}>
-                  Día {item.day_number}
-                </Text>
+                <Text style={styles.dayPillText}>Día {item.day_number}</Text>
               </View>
 
               <CustomButton
@@ -407,17 +411,7 @@ export default function VerBloque() {
             </View>
           </TouchableOpacity>
         )}
-        ListFooterComponent={
-          <View style={styles.footer}>
-            <CustomButton
-              title="Eliminar bloque"
-              variant="danger"
-              size="sm"
-              fullWidth={false}
-              onPress={deleteBlock}
-            />
-          </View>
-        }
+        ListFooterComponent={<View style={styles.footerSpacer} />}
       />
     </View>
   );
@@ -477,6 +471,7 @@ const styles = StyleSheet.create({
 
   heroTop: {
     flexDirection: "row",
+    alignItems: "flex-start",
     marginBottom: SPACING.lg,
   },
 
@@ -507,6 +502,28 @@ const styles = StyleSheet.create({
     lineHeight: 21,
   },
 
+  heroActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: SPACING.sm,
+    marginLeft: SPACING.sm,
+  },
+
+  iconActionButton: {
+    width: 36,
+    height: 36,
+    borderRadius: RADIUS.full,
+    backgroundColor: COLORS.background,
+    borderWidth: 1,
+    borderColor: COLORS.outlineVariant,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  iconDangerButton: {
+    borderColor: COLORS.error,
+  },
+
   statsRow: {
     flexDirection: "row",
     backgroundColor: COLORS.background,
@@ -530,6 +547,7 @@ const styles = StyleSheet.create({
     ...(TYPOGRAPHY.bodySm as TextStyle),
     color: COLORS.onSurfaceVariant,
     fontWeight: "600",
+    textAlign: "center",
   },
 
   statDivider: {
@@ -751,9 +769,7 @@ const styles = StyleSheet.create({
     lineHeight: 21,
   },
 
-  footer: {
-    alignItems: "center",
-    marginTop: SPACING.lg,
-    paddingBottom: SPACING.md,
+  footerSpacer: {
+    height: SPACING.xl,
   },
 });

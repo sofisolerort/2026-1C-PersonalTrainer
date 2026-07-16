@@ -56,9 +56,8 @@ type ExerciseWithProgression = Exercise & {
 export default function DayDetail() {
   const router = useRouter();
 
-  const { dayId, dayName, weekNumber } = useLocalSearchParams<{
+  const { dayId, weekNumber } = useLocalSearchParams<{
     dayId: string;
-    dayName?: string;
     weekNumber?: string;
   }>();
 
@@ -71,7 +70,7 @@ export default function DayDetail() {
   useFocusEffect(
     useCallback(() => {
       fetchDayDetail();
-    }, [dayId, selectedWeek]),
+    }, [dayId, selectedWeek])
   );
 
   const fetchDayDetail = async () => {
@@ -133,7 +132,7 @@ export default function DayDetail() {
         baseExercises.map((exercise) => ({
           ...exercise,
           progression: null,
-        })),
+        }))
       );
 
       setLoading(false);
@@ -143,7 +142,7 @@ export default function DayDetail() {
     const exercisesWithProgression = baseExercises.map((exercise) => {
       const progression =
         progressionsData?.find(
-          (progression) => progression.exercise_id === exercise.id,
+          (progression) => progression.exercise_id === exercise.id
         ) ?? null;
 
       return {
@@ -156,41 +155,33 @@ export default function DayDetail() {
     setLoading(false);
   };
 
-  const deleteExercise = async (exerciseId: string) => {
-    Alert.alert(
-      "Eliminar ejercicio",
-      "Se eliminará el ejercicio con sus progresiones.",
-      [
-        {
-          text: "Cancelar",
-          style: "cancel",
-        },
-        {
-          text: "Eliminar",
-          style: "destructive",
-          onPress: async () => {
-            const { error } = await supabase
-              .from("exercises")
-              .delete()
-              .eq("id", exerciseId);
+  const goToEditDay = () => {
+    if (!day) return;
 
-            if (error) {
-              Alert.alert("Error", error.message);
-              return;
-            }
+    router.push({
+      pathname: "/(trainer)/clients/days/EditarDia",
+      params: {
+        dayId: day.id,
+      },
+    } as any);
+  };
 
-            fetchDayDetail();
-          },
-        },
-      ],
-    );
+  const goToDeleteDay = () => {
+    if (!day) return;
+
+    router.push({
+      pathname: "/(trainer)/clients/days/EliminarDia",
+      params: {
+        dayId: day.id,
+      },
+    } as any);
   };
 
   const goToCreateExercise = () => {
     if (!day) return;
 
     router.push({
-      pathname: "/(trainer)/clients/CrearEjercicio",
+      pathname: "/(trainer)/clients/exercises/CrearEjercicio",
       params: {
         dayId: day.id,
         weekNumber: String(selectedWeek),
@@ -198,9 +189,27 @@ export default function DayDetail() {
     } as any);
   };
 
+  const goToEditExercise = (exerciseId: string) => {
+    router.push({
+      pathname: "/(trainer)/clients/exercises/EditarEjercicio",
+      params: {
+        exerciseId,
+      },
+    } as any);
+  };
+
+  const goToDeleteExercise = (exerciseId: string) => {
+    router.push({
+      pathname: "/(trainer)/clients/exercises/EliminarEjercicio",
+      params: {
+        exerciseId,
+      },
+    } as any);
+  };
+
   const goToProgression = (exerciseId: string) => {
     router.push({
-      pathname: "/(trainer)/clients/EditarProgresion",
+      pathname: "/(trainer)/clients/exercises/EditarProgresion",
       params: {
         exerciseId,
         weekNumber: String(selectedWeek),
@@ -233,7 +242,7 @@ export default function DayDetail() {
   };
 
   const loadedProgressions = exercises.filter(
-    (exercise) => exercise.progression,
+    (exercise) => exercise.progression
   ).length;
 
   if (loading) {
@@ -279,7 +288,7 @@ export default function DayDetail() {
               <Text style={styles.kicker}>Detalle del día</Text>
 
               <Text style={styles.title}>
-                Día {day.day_number}: {dayName || day.day_name}
+                Día {day.day_number}: {day.day_name}
               </Text>
             </View>
 
@@ -300,6 +309,32 @@ export default function DayDetail() {
                     Acá cargás los ejercicios del día y su progresión para esta
                     semana.
                   </Text>
+                </View>
+
+                <View style={styles.heroActions}>
+                  <TouchableOpacity
+                    activeOpacity={0.75}
+                    style={styles.iconActionButton}
+                    onPress={goToEditDay}
+                  >
+                    <MaterialIcons
+                      name="edit"
+                      size={19}
+                      color={COLORS.primary}
+                    />
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    activeOpacity={0.75}
+                    style={[styles.iconActionButton, styles.iconDangerButton]}
+                    onPress={goToDeleteDay}
+                  >
+                    <MaterialIcons
+                      name="delete-outline"
+                      size={19}
+                      color={COLORS.error}
+                    />
+                  </TouchableOpacity>
                 </View>
               </View>
 
@@ -388,16 +423,34 @@ export default function DayDetail() {
                   )}
                 </View>
 
-                <TouchableOpacity
-                  style={styles.deleteButton}
-                  onPress={() => deleteExercise(item.id)}
-                >
-                  <MaterialIcons
-                    name="delete-outline"
-                    size={22}
-                    color={COLORS.error}
-                  />
-                </TouchableOpacity>
+                <View style={styles.exerciseActions}>
+                  <TouchableOpacity
+                    activeOpacity={0.75}
+                    style={styles.exerciseIconButton}
+                    onPress={() => goToEditExercise(item.id)}
+                  >
+                    <MaterialIcons
+                      name="edit"
+                      size={18}
+                      color={COLORS.primary}
+                    />
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    activeOpacity={0.75}
+                    style={[
+                      styles.exerciseIconButton,
+                      styles.exerciseDangerButton,
+                    ]}
+                    onPress={() => goToDeleteExercise(item.id)}
+                  >
+                    <MaterialIcons
+                      name="delete-outline"
+                      size={18}
+                      color={COLORS.error}
+                    />
+                  </TouchableOpacity>
+                </View>
               </View>
 
               <View
@@ -512,6 +565,7 @@ const styles = StyleSheet.create({
 
   heroTop: {
     flexDirection: "row",
+    alignItems: "flex-start",
     marginBottom: SPACING.lg,
   },
 
@@ -542,6 +596,28 @@ const styles = StyleSheet.create({
     lineHeight: 21,
   },
 
+  heroActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: SPACING.sm,
+    marginLeft: SPACING.sm,
+  },
+
+  iconActionButton: {
+    width: 36,
+    height: 36,
+    borderRadius: RADIUS.full,
+    backgroundColor: COLORS.background,
+    borderWidth: 1,
+    borderColor: COLORS.outlineVariant,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  iconDangerButton: {
+    borderColor: COLORS.error,
+  },
+
   statsRow: {
     flexDirection: "row",
     backgroundColor: COLORS.background,
@@ -565,6 +641,7 @@ const styles = StyleSheet.create({
     ...(TYPOGRAPHY.bodySm as TextStyle),
     color: COLORS.onSurfaceVariant,
     fontWeight: "600",
+    textAlign: "center",
   },
 
   statDivider: {
@@ -671,13 +748,26 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
 
-  deleteButton: {
-    width: 36,
-    height: 36,
+  exerciseActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: SPACING.xs,
+    marginLeft: SPACING.xs,
+  },
+
+  exerciseIconButton: {
+    width: 34,
+    height: 34,
     borderRadius: RADIUS.full,
+    backgroundColor: COLORS.background,
+    borderWidth: 1,
+    borderColor: COLORS.outlineVariant,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: COLORS.background,
+  },
+
+  exerciseDangerButton: {
+    borderColor: COLORS.error,
   },
 
   progressionBox: {

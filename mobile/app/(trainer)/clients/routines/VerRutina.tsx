@@ -117,7 +117,7 @@ export default function VerRutina() {
     if (!routine) return;
 
     router.push({
-      pathname: "/(trainer)/clients/CrearBloque",
+      pathname: "/(trainer)/clients/blocks/CrearBloque",
       params: {
         routineId: routine.id,
       },
@@ -126,7 +126,7 @@ export default function VerRutina() {
 
   const goToBlock = (blockId: string) => {
     router.push({
-      pathname: "/(trainer)/clients/VerBloque",
+      pathname: "/(trainer)/clients/blocks/VerBloque",
       params: {
         blockId,
       },

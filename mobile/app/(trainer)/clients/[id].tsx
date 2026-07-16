@@ -87,8 +87,8 @@ export default function ClientDetail() {
 
     router.push({
       pathname: hasRoutine
-        ? "/(trainer)/clients/VerRutina"
-        : "/(trainer)/clients/CrearRutina",
+        ? "/(trainer)/clients/routines/VerRutina"
+        : "/(trainer)/clients/routines/CrearRutina",
       params: { clientId: client.id },
     } as any);
   };

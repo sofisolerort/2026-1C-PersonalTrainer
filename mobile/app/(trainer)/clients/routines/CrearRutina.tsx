@@ -7,7 +7,7 @@ import {
   TextStyle,
 } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
-import { supabase } from "../../../utils/Supabase";
+
 
 import { CustomInput } from "@/components/CustomInput";
 import { CustomButton } from "@/components/CustomButton";
@@ -17,6 +17,7 @@ import {
   SPACING,
   TYPOGRAPHY,
 } from "@/constants/theme";
+import { supabase } from "@/utils/Supabase";
 
 export default function CrearRutina() {
   const { clientId } = useLocalSearchParams<{ clientId: string }>();
@@ -56,7 +57,7 @@ export default function CrearRutina() {
     Alert.alert("Éxito", "Rutina creada correctamente");
 
     router.replace({
-      pathname: "/(trainer)/clients/VerRutina",
+      pathname: "/(trainer)/clients/routines/CrearRutina",
       params: { clientId },
     });
   };
